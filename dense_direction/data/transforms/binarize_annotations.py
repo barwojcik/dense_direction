@@ -1,12 +1,13 @@
 """
 BinarizeAnnotations transform for semantic segmentation masks.
 
-This module provides a binarization transformation that normalizes and threshold the ground truth
-semantic segmentation mask by setting values above 0.5 to 1 and others to 0, which is useful for
-binary image classification tasks.
+This module provides a class for binarization transformation that normalizes and thresholds the ground truth
+semantic segmentation mask by setting values above 0.5 to 1 and others to 0, which is required for
+direction estimation.
 """
 
 import numpy as np
+from typing import Any
 from mmcv import BaseTransform
 from mmengine import TRANSFORMS
 
@@ -23,14 +24,14 @@ class BinarizeAnnotations(BaseTransform):
         dict: The input dictionary with binarized semantic segmentation mask.
     """
 
-    def transform(self, results: dict) -> dict:
+    def transform(self, results: dict[str, Any]) -> dict[str, Any]:
         """
         Applies semantic segmentation mask transformation.
 
         This method takes in a dictionary of results and applies the following transformations:
-        - Normalizes the ground truth semantic segmentation mask by dividing by 3*255
+        - Reduces the channel number to 1
+        - Normalizes values to 0-1 range
         - Applies thresholding to set values above 0.5 to 1 and others to 0
-        - Casts the resulting mask to uint8 data type
 
         Args:
             results (dict): A dictionary of results containing the ground truth semantic segmentation mask.

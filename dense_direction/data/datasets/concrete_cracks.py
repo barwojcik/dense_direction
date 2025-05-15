@@ -1,8 +1,12 @@
 """
 ConcreteCracks dataset for semantic segmentation.
 
-This module provides a concrete cracks segmentation dataset, which is a collection of images
+This module provides a class for concrete cracks segmentation dataset, which is a collection of images
 and corresponding semantic segmentation masks of cracks in concrete surfaces.
+
+Dataset source:
+    Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”, Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
+
 """
 
 from mmengine import DATASETS
