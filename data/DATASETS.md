@@ -18,7 +18,7 @@ Currently, there's a mix of images with `.jpg` and `.JPG` suffixes in `rgb` dire
 `BaseSegDataset`. To resolve this, you can use the following command to lowercase all image suffixes:
 
 ```bash
-  rename 's/\.JPG$/.jpg/' *.JPG
+rename 's/\.JPG$/.jpg/' *.JPG
 ```
 
 ### Dataset structure
