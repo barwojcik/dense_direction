@@ -7,8 +7,7 @@ ensuring that the positive class is in the middle of the image and does not take
 
 import random
 import numpy as np
-import cv2
-from typing import Any, Dict, Optional, Union
+from typing import Union
 from mmcv import BaseTransform
 from mmcv.transforms.utils import cache_randomness
 from mmengine import TRANSFORMS
@@ -62,10 +61,8 @@ class MaskGuidedRandomCrop(BaseTransform):
                 outside their expected ranges.
         """
         super().__init__()
-        assert (
-            isinstance(crop_size, int) or (isinstance(crop_size, tuple) and len(crop_size) == 2),
-            'The expected crop_size is an integer, or a tuple containing two integers',
-        )
+        assert isinstance(crop_size, int) or (isinstance(crop_size, tuple) and len(crop_size) == 2), \
+            'The expected crop_size is an integer, or a tuple containing two integers'
 
         if isinstance(crop_size, int):
             crop_size = (crop_size, crop_size)
