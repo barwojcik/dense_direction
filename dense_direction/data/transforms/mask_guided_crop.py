@@ -39,12 +39,14 @@ class MaskGuidedRandomCrop(BaseTransform):
         ignore_index (int): The label index to be ignored. Default: 255
     """
 
-    def __init__(self,
-                 crop_size: Union[int, tuple[int, int]],
-                 min_ratio: float = 0.,
-                 max_ratio: float = 1.,
-                 max_attempts: int = 100,
-                 ignore_index: int = 255) -> None:
+    def __init__(
+        self,
+        crop_size: Union[int, tuple[int, int]],
+        min_ratio: float = 0.0,
+        max_ratio: float = 1.0,
+        max_attempts: int = 100,
+        ignore_index: int = 255,
+    ) -> None:
         """
         Initializes the object with parameters for guided cropping.
 
@@ -61,8 +63,9 @@ class MaskGuidedRandomCrop(BaseTransform):
                 outside their expected ranges.
         """
         super().__init__()
-        assert isinstance(crop_size, int) or (isinstance(crop_size, tuple) and len(crop_size) == 2), \
-            'The expected crop_size is an integer, or a tuple containing two integers'
+        assert isinstance(crop_size, int) or (
+            isinstance(crop_size, tuple) and len(crop_size) == 2
+        ), "The expected crop_size is an integer, or a tuple containing two integers"
 
         if isinstance(crop_size, int):
             crop_size = (crop_size, crop_size)
@@ -114,20 +117,20 @@ class MaskGuidedRandomCrop(BaseTransform):
         """
 
         my1, my2, mx1, mx2 = self.margins
-        mask_roi = results['gt_seg_map'][my1:-(my2+1), mx1:-(mx2+1)]
+        mask_roi = results["gt_seg_map"][my1 : -(my2 + 1), mx1 : -(mx2 + 1)]
 
         location_candidates: list[tuple[int, int]] = list(zip(*np.where(mask_roi > 0)))
         crop_location: tuple[int, int] = random.choice(location_candidates)
 
-        if self.min_ratio == 0. and self.max_ratio == 1.:
+        if self.min_ratio == 0.0 and self.max_ratio == 1.0:
             return crop_location
 
-        if self._evaluate_crop_location(crop_location, results['gt_seg_map']):
+        if self._evaluate_crop_location(crop_location, results["gt_seg_map"]):
             return crop_location
 
         for _ in range(self.max_attempts):
             crop_location = random.choice(location_candidates)
-            if self._evaluate_crop_location(crop_location, results['gt_seg_map']):
+            if self._evaluate_crop_location(crop_location, results["gt_seg_map"]):
                 return crop_location
 
         return crop_location
@@ -163,15 +166,15 @@ class MaskGuidedRandomCrop(BaseTransform):
         crop_location: tuple[int, int] = self._get_crop_location(results)
 
         # Crop image and alter image and its shape in results
-        img: np.ndarray = self._crop_image(results['img'], crop_location)
-        results['img'] = img
-        results['img_shape'] = img.shape[:2]
+        img: np.ndarray = self._crop_image(results["img"], crop_location)
+        results["img"] = img
+        results["img_shape"] = img.shape[:2]
 
         # Crop all segmentation maps
-        for key in results.get('seg_fields', ['gt_seg_map']):
+        for key in results.get("seg_fields", ["gt_seg_map"]):
             results[key] = self._crop_image(results[key], crop_location)
 
         return results
 
     def __repr__(self):
-        return self.__class__.__name__ + f'(crop_size={self.crop_size})'
+        return self.__class__.__name__ + f"(crop_size={self.crop_size})"

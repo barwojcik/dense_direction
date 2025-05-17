@@ -51,11 +51,11 @@ class ConcreteCracksDataset(BaseSegDataset):
     )
 
     def __init__(
-            self,
-            data_root: str = "./data/concreteCrackSegmentationDataset",
-            phase: str | None = None,
-            **kwargs,
-        ) -> None:
+        self,
+        data_root: str = "./data/concreteCrackSegmentationDataset",
+        phase: str | None = None,
+        **kwargs,
+    ) -> None:
         """
         Initializes the ConcreteCracksDataset class.
 
