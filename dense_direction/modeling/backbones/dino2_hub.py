@@ -62,6 +62,7 @@ class Dino2TorchHub(BaseModule):
         reshape_output: bool = True,
         return_class_token: bool = False,
         norm_output: bool = True,
+        frozen: bool = False,
         **kwargs,
     ) -> None:
         """
@@ -83,6 +84,7 @@ class Dino2TorchHub(BaseModule):
                 only when return_intermediate_layers argument is set to True.
             norm_output (bool): Whether to normalize the output. Default True. Applies only when
                 return_intermediate_layers argument is set to True.
+            frozen (bool): Whether to freeze the model weights. Default False.
         """
 
         super().__init__(**kwargs)
@@ -99,6 +101,12 @@ class Dino2TorchHub(BaseModule):
         self.reshape_output: bool = reshape_output
         self.return_class_token: bool = return_class_token
         self.norm_output: bool = norm_output
+        self.frozen: bool = frozen
+        self._freeze()
+
+    def _freeze(self) -> None:
+        if self.frozen:
+            self.layers.requires_grad_(False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
