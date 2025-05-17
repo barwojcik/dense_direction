@@ -2,13 +2,13 @@
 Guided Random Crop Transformation for images and semantic segmentation maps.
 
 This module provides a class for transformation that randomly crops images and semantic
-segmentation maps, ensuring that the positive class is in the middle of the image and does not
-take too much or too little image area.
+segmentation maps, while ensuring that the positive class is in the middle of the image and does
+not take too much or too little image area.
 """
 
 import random
 import numpy as np
-from typing import Union
+from typing import Union, Optional
 from mmcv import BaseTransform
 from mmcv.transforms.utils import cache_randomness
 from mmengine import TRANSFORMS
@@ -38,6 +38,8 @@ class MaskGuidedRandomCrop(BaseTransform):
         max_ratio (float): The maximum ratio that positive category can occupy.
         max_attempts (int): The maximum number of attempts to crop.
         ignore_index (int): The label index to be ignored. Default: 255
+        by_index (Optional[int]): The index of the category to be used to guide cropping. If None,
+            it assumes binary data. Default: None.
     """
 
     def __init__(
@@ -47,6 +49,7 @@ class MaskGuidedRandomCrop(BaseTransform):
         max_ratio: float = 1.0,
         max_attempts: int = 100,
         ignore_index: int = 255,
+        by_index: Optional[int] = None,
     ) -> None:
         """
         Initializes the object with parameters for guided cropping.
@@ -59,6 +62,8 @@ class MaskGuidedRandomCrop(BaseTransform):
             max_ratio (float): The maximum ratio that positive category can occupy.
             max_attempts (int): The maximum number of attempts to crop.
             ignore_index (int): The label index to be ignored. Default: 255
+            by_index (Optional[int]): The index of the category to be used to guide cropping.
+                If None, it assumes binary data. Default: None.
 
         Raises:
             AssertionError: If the provided crop_size is invalid or if any ratio values are
@@ -87,6 +92,7 @@ class MaskGuidedRandomCrop(BaseTransform):
         self.max_ratio: float = max_ratio
         self.max_attempts: int = max_attempts
         self.ignore_index: int = ignore_index
+        self.by_index: Optional[int] = by_index
 
     def _evaluate_crop_location(self, crop_location: tuple[int, int], mask: np.ndarray) -> bool:
         """
@@ -119,7 +125,9 @@ class MaskGuidedRandomCrop(BaseTransform):
         """
 
         my1, my2, mx1, mx2 = self.margins
-        mask_roi = results["gt_seg_map"][my1 : -(my2 + 1), mx1 : -(mx2 + 1)]
+        mask_roi: np.ndarray = results["gt_seg_map"][my1 : -(my2 + 1), mx1 : -(mx2 + 1)]
+        if self.by_index is not None:
+            mask_roi = np.where(mask_roi == self.by_index, 1, 0)
 
         location_candidates: list[tuple[int, int]] = list(zip(*np.where(mask_roi > 0)))
         crop_location: tuple[int, int] = random.choice(location_candidates)

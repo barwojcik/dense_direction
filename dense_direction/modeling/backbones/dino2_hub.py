@@ -1,8 +1,8 @@
 """
 Dinov2 model wrapper for PyTorch Hub.
 
-This module provides a wrapper for the Dinov2 model from PyTorch Hub,
-that can be loaded and used as a backbone.
+This module provides a wrapper for the Dinov2 model from PyTorch Hub, that can be loaded and used
+as a backbone.
 """
 
 from typing import Sequence
@@ -20,8 +20,8 @@ class Dino2TorchHub(BaseModule):
     Model source:
         https://github.com/facebookresearch/dinov2
 
-    This module provides a wrapper for PyTorch Hub distribution of the Dinov2 model,
-    that can be loaded and used as a backbone.
+    This class provides a wrapper for PyTorch Hub distribution of the Dinov2 model, that can be
+    loaded and used as a backbone.
 
     Args:
         model_size (str): The size of the model to be used. It can be one of: 'small', 'baseline',

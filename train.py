@@ -1,12 +1,16 @@
 """
-Module for training a model basd on provided config.
+Script for training a model basd on provided config.
+
+This script provides a basic structure for training a model using the provided configuration file.
+It includes functions to parse command-line arguments, initialize the configuration, build and run
+the runner, and save the trained model weights to the specified directory.
+
+For more information about the available command-line arguments, please refer to the MMEngine
+documentation.
 """
 
 import argparse
-import mmengine
 from mmengine import Config, DictAction, RUNNERS
-import mmcv
-import mmseg
 import dense_direction
 
 
