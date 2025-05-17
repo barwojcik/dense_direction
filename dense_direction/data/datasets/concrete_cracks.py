@@ -1,11 +1,12 @@
 """
 ConcreteCracks dataset for semantic segmentation.
 
-This module provides a class for concrete cracks segmentation dataset, which is a collection of images
-and corresponding semantic segmentation masks of cracks in concrete surfaces.
+This module provides a class for concrete cracks segmentation dataset, which is a collection of
+images and corresponding semantic segmentation masks of cracks in concrete surfaces.
 
 Dataset source:
-    Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”, Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
+    Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”,
+    Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
 
 """
 
@@ -24,14 +25,15 @@ class ConcreteCracksDataset(BaseSegDataset):
     For more details, refer to the .data/DATASETS.md.
 
     Dataset source:
-        Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”, Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
+        Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”,
+        Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
 
     Arguments:
         data_root (str): Root directory of the dataset.
             Default to './data/concreteCrackSegmentationDataset',
         phase (str): 'train', 'val', 'test' or None (default: None)
-        **kwargs: Any other argument that is available in base class except defaults ('img_suffix', 'seg_map_suffix',
-            'reduce_zero_label', 'data_prefix', 'indices').
+        **kwargs: Any other argument that is available in base class except defaults ('img_suffix',
+            'seg_map_suffix', 'reduce_zero_label', 'data_prefix', 'indices').
     """
 
     METAINFO: dict[str, Any] = dict(
@@ -63,8 +65,8 @@ class ConcreteCracksDataset(BaseSegDataset):
             data_root (str): Root directory of the dataset.
                 Default to './data/concreteCrackSegmentationDataset',
             phase (str): 'train', 'val', 'test' or None (default: None)
-            **kwargs: Any other argument that is available in base class except defaults ('img_suffix', 'seg_map_suffix',
-                'reduce_zero_label', 'data_prefix', 'indices').
+            **kwargs: Any other argument that is available in base class except defaults
+                ('img_suffix', 'seg_map_suffix', 'reduce_zero_label', 'data_prefix', 'indices').
         """
         parameters = copy.deepcopy(self.DEFAULT_PARAMS)
 

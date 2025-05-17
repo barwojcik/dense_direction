@@ -1,9 +1,9 @@
 """
 BinarizeAnnotations transform for semantic segmentation maps.
 
-This module provides a class for binarization transformation that normalizes and thresholds the ground truth
-semantic segmentation map by setting values above 0.5 to 1 and others to 0, which is required for
-direction estimation.
+This module provides a class for binarization transformation that normalizes and thresholds the
+ground truth semantic segmentation map by setting values above 0.5 to 1 and others to 0, which
+is required for direction estimation.
 """
 
 import numpy as np
@@ -34,7 +34,8 @@ class BinarizeAnnotations(BaseTransform):
             - Applies thresholding to set values above 0.5 to 1 and others to 0
 
         Args:
-            results (dict[str, Any]): A dictionary of results containing the ground truth semantic segmentation map.
+            results (dict[str, Any]): A dictionary of results containing the ground truth semantic
+            segmentation map.
 
         Returns:
             dict[str, Any]: The result dictionary with the transformed semantic

@@ -24,16 +24,17 @@ class Dino2TorchHub(BaseModule):
     that can be loaded and used as a backbone.
 
     Args:
-        model_size (str): The size of the model to be used. It can be one of 'small', 'baseline', 'large',
-            or 'xlarge'.
+        model_size (str): The size of the model to be used. It can be one of: 'small', 'baseline',
+            'large', 'xlarge'.
         with_registers (bool): Whether to use model trained with registers or not. Default True.
         return_intermediate_layers (bool): Whether to return intermediate layers. Default True.
-        layers_to_extract (int | Sequence[int]): The number of last layers or the indices of the layers to extract.
-            Default True. Applies only when return_intermediate_layers argument is set to True.
+        layers_to_extract (int | Sequence[int]): The number of last layers or the indices of the
+            layers to extract. Default True. Applies only when return_intermediate_layers argument
+            is set to True.
         reshape_output (bool): Whether to reshape the output. Default True. Applies only when
             return_intermediate_layers argument is set to True.
-        return_class_token (bool): Whether to return the class token. Default False. Applies only when
-            return_intermediate_layers argument is set to True.
+        return_class_token (bool): Whether to return the class token. Default False. Applies only
+            when return_intermediate_layers argument is set to True.
         norm_output (bool): Whether to normalize the output. Default True. Applies only when
             return_intermediate_layers argument is set to True.
     """
@@ -67,16 +68,19 @@ class Dino2TorchHub(BaseModule):
         Initializes the Dinov2 model from PyTorch Hub.
 
         Args:
-            model_size (str): The size of the model to be used. It can be one of 'small', 'baseline', 'large',
-                or 'xlarge'.
-            with_registers (bool): Whether to use model trained with registers or not. Default True.
-            return_intermediate_layers (bool): Whether to return intermediate layers. Default True.
-            layers_to_extract (int | Sequence[int]): The number of last layers or the indices of the layers to extract.
-                Default True. Applies only when return_intermediate_layers argument is set to True.
+            model_size (str): The size of the model to be used. It can be one of: 'small',
+                'baseline', 'large', 'xlarge'.
+            with_registers (bool): Whether to use model trained with registers or not.
+                Default True.
+            return_intermediate_layers (bool): Whether to return intermediate layers.
+                Default True.
+            layers_to_extract (int | Sequence[int]): The number of last layers or the indices of
+                the layers to extract. Default True. Applies only when return_intermediate_layers
+                argument is set to True.
             reshape_output (bool): Whether to reshape the output. Default True. Applies only when
                 return_intermediate_layers argument is set to True.
-            return_class_token (bool): Whether to return the class token. Default False. Applies only when
-                return_intermediate_layers argument is set to True.
+            return_class_token (bool): Whether to return the class token. Default False. Applies
+                only when return_intermediate_layers argument is set to True.
             norm_output (bool): Whether to normalize the output. Default True. Applies only when
                 return_intermediate_layers argument is set to True.
         """

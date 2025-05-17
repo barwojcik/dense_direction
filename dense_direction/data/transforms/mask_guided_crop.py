@@ -1,8 +1,9 @@
 """
 Guided Random Crop Transformation for images and semantic segmentation maps.
 
-This module provides a class for transformation that randomly crops images and semantic segmentation maps,
-ensuring that the positive class is in the middle of the image and does not take too much or too little image area.
+This module provides a class for transformation that randomly crops images and semantic
+segmentation maps, ensuring that the positive class is in the middle of the image and does not
+take too much or too little image area.
 """
 
 import random
@@ -31,8 +32,8 @@ class MaskGuidedRandomCrop(BaseTransform):
         - gt_seg_map
 
     Args:
-        crop_size (Union[int, Tuple[int, int]]): Expected size after cropping with the format of (h, w).
-            If set to an integer, then cropping width and height are equal to this integer.
+        crop_size (Union[int, Tuple[int, int]]): Expected size after cropping with the format of
+            (h, w). If set to an integer, then cropping width and height are equal to this integer.
         min_ratio (float): The minimum ratio that positive category can occupy.
         max_ratio (float): The maximum ratio that positive category can occupy.
         max_attempts (int): The maximum number of attempts to crop.
@@ -51,8 +52,9 @@ class MaskGuidedRandomCrop(BaseTransform):
         Initializes the object with parameters for guided cropping.
 
         Args:
-            crop_size (Union[int, Tuple[int, int]]): Expected size after cropping with the format of (h, w).
-                If set to an integer, then cropping width and height are equal to this integer.
+            crop_size (Union[int, Tuple[int, int]]): Expected size after cropping with the format
+                of (h, w). If set to an integer, then cropping width and height are equal to this
+                integer.
             min_ratio (float): The minimum ratio that positive category can occupy.
             max_ratio (float): The maximum ratio that positive category can occupy.
             max_attempts (int): The maximum number of attempts to crop.
