@@ -7,7 +7,6 @@ images and corresponding semantic segmentation masks of cracks in concrete surfa
 Dataset source:
     Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”,
     Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
-
 """
 
 import copy
@@ -46,7 +45,7 @@ class ConcreteCracksDataset(BaseSegDataset):
         reduce_zero_label=False,
         data_prefix=dict(img_path="rgb", seg_map_path="BW"),
     )
-    SPLIT: dict[str, int] = dict(
+    SPLITS: dict[str, int] = dict(
         train=278,
         val=[i for i in range(278, 368)],
         test=[i for i in range(368, 458)],
@@ -70,8 +69,8 @@ class ConcreteCracksDataset(BaseSegDataset):
         """
         parameters = copy.deepcopy(self.DEFAULT_PARAMS)
 
-        if phase is not None and phase in self.SPLIT.keys():
-            parameters["indices"] = self.SPLIT[phase]
+        if phase is not None and phase in self.SPLITS.keys():
+            parameters["indices"] = self.SPLITS[phase]
 
         kwargs.update(parameters)
         super().__init__(

@@ -6,8 +6,10 @@ as a backbone.
 """
 
 from typing import Sequence
+
 import torch
 import torch.nn as nn
+
 from mmengine.model import BaseModule
 from mmseg.models.builder import BACKBONES
 
@@ -37,6 +39,7 @@ class Dino2TorchHub(BaseModule):
             when return_intermediate_layers argument is set to True.
         norm_output (bool): Whether to normalize the output. Default True. Applies only when
             return_intermediate_layers argument is set to True.
+        **kwargs: Additional arguments to pass to BaseModule.
     """
 
     REPO_NAME: str = "facebookresearch/dinov2"
@@ -113,10 +116,10 @@ class Dino2TorchHub(BaseModule):
         Forward pass through the model.
 
         Args:
-        x (Tensor): Input tensor to be processed by the model.
+            x (Tensor): Input tensor to be processed by the model.
 
         Returns:
-        Tensor: Output tensor after processing by the model.
+            Tensor: Output tensor after processing by the model.
         """
 
         if self.return_intermediate_layers:

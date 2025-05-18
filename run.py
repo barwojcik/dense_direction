@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     """
-    Main entry point of the training loop.
+    Main entry point of the training/testing loop.
 
     This function initializes the configuration, builds and runs the runner based on the provided
     arguments and configuration file.
