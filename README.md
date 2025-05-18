@@ -2,8 +2,8 @@
 
 ### Description
 The `dense_direction` is a framework for dense direction estimation of linear objects in images.
-It is built on top of popular deep learning libraries such as OpenMMLab's `mmengine`, `mmcv`, and `mmseg`.
-It utilizes loss-based weak-supervision to learn the direction estimation of linear objects from semantic segmentation maps.
+It is built on top of popular OpenMMLab's libraries (`mmengine`, `mmcv`, and `mmseg`), and utilizes loss-based 
+algorithmic weak-supervision to learn the direction estimation of linear objects from semantic segmentation maps.
 
 ### Key Features
 - **Loss-Based Weak-Supervision**: Our approach leverages loss functions to guide the learning process, reducing the need for explicit labeling. There is no need for direction labels, only widely available semantic segmentation maps are needed.

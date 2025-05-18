@@ -24,7 +24,7 @@ from mmseg.models.utils import resize
 @MODELS.register_module()
 class Directioner(EncoderDecoder):
     """
-    EncoderDecoder for direction estimation.
+    Directioner, an EncoderDecoder for direction estimation.
 
     This class overwrites certain methods of EncoderDecoder class to adapt it to direction
     estimation.
@@ -55,7 +55,7 @@ class Directioner(EncoderDecoder):
         init_cfg: OptMultiConfig = None,
     ) -> None:
         """
-        EncoderDecoder for direction estimation.
+        Directioner, an EncoderDecoder for direction estimation.
 
         Args:
             backbone (ConfigType): The config for the backbone of directioner.
@@ -108,22 +108,22 @@ class Directioner(EncoderDecoder):
 
     def postprocess_result(self, dir_vector_field: Tensor, data_samples: OptSampleList = None) -> SampleList:
         """
-               Converts the list of results to `SegDataSample`.
+        Converts the list of results to `SegDataSample`.
 
-               Args:
-                   dir_vector_field (Tensor): The estimated directions in the form of 2D vector field for
-                       each input image.
-                   data_samples (list[:obj:`SegDataSample`]): The seg data samples. It usually includes
-                       information such as `metainfo` and `gt_sem_seg`. Default to None.
+        Args:
+           dir_vector_field (Tensor): The estimated directions in the form of 2D vector field for
+               each input image.
+           data_samples (list[:obj:`SegDataSample`]): The seg data samples. It usually includes
+               information such as `metainfo` and `gt_sem_seg`. Default to None.
 
-               Returns:
-                   list[:obj:`SegDataSample`]: Direction estimation results of the input images.
-                       Each SegDataSample usually contains:
+        Returns:
+           list[:obj:`SegDataSample`]: Direction estimation results of the input images.
+               Each SegDataSample usually contains:
 
-                   - ``estimated_dirs``(PixelData): Estimated directions as per pixel angle.
-                   - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
-                       conversion into angles.
-               """
+           - ``estimated_dirs``(PixelData): Estimated directions as per pixel angle.
+           - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
+               conversion into angles.
+        """
         batch_size, C, H, W = dir_vector_field.shape
 
         if data_samples is None:

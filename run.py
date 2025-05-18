@@ -1,5 +1,5 @@
 """
-Script for training/testing models basd on provided config.
+Script for training/testing models based on provided config.
 
 This script provides a basic structure for training and testing a model using the provided
 configuration file. It includes functions to parse command-line arguments, initialize the
