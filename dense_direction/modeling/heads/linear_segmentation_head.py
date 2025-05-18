@@ -24,7 +24,7 @@ class LinearHead(BaseDecodeHead):
         **kwargs: Additional arguments to pass to BaseDecodeHead.
     """
 
-    def __init__(self,**kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         """
         Linear decode head for a segmentation task.
 

@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
         type=str.lower,
         choices=["train", "test", "both"],
         help="run training, testing or both, one after another. It defaults to both, so first model "
-             "will be trained then tested.",
+        "will be trained then tested.",
     )
     parser.add_argument("--config", help="config file path")
     parser.add_argument(
@@ -33,10 +33,10 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         action=DictAction,
         help="override some settings in the used config, the key-value pair  in xxx=yyy format "
-             "will be merged into config file. If the value to be overwritten is a list, it "
-             'should be like key="[a,b]" or key=a,b. It also allows nested list/tuple values, '
-             'e.g. key="[(a,b),(c,d)]". Note that the quotation marks are necessary and that no '
-             "white space  is allowed.",
+        "will be merged into config file. If the value to be overwritten is a list, it "
+        'should be like key="[a,b]" or key=a,b. It also allows nested list/tuple values, '
+        'e.g. key="[(a,b),(c,d)]". Note that the quotation marks are necessary and that no '
+        "white space  is allowed.",
     )
 
     return parser.parse_args()
@@ -58,10 +58,10 @@ def main():
 
     runner = RUNNERS.build(cfg)
 
-    if args.phase in ['train', 'both']:
+    if args.phase in ["train", "both"]:
         runner.train()
 
-    if args.phase in ['test', 'both']:
+    if args.phase in ["test", "both"]:
         runner.test()
 
 
