@@ -1,6 +1,10 @@
 # Datasets
 
-This file lists datasets available in `dense_direction` library.
+This file lists custom datasets implemented in `dense_direction`. Apart from these, all datasets available in `mmseg` are supported.
+
+More information can be found in `mmseg` documentation about 
+[datasets](https://github.com/open-mmlab/mmsegmentation/blob/main/docs/en/advanced_guides/datasets.md), 
+and [adding a new dataset](https://github.com/open-mmlab/mmsegmentation/blob/main/docs/en/advanced_guides/add_datasets.md).
 
 ## Concrete Cracks Segmentation Dataset
 
