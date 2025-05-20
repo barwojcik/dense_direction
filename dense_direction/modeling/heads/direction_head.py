@@ -81,8 +81,10 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         sampler (dict|None): The config of segmentation map sampler.
             Default: None.
         align_corners (bool): align_corners argument of F.interpolate. Default: False.
-        norm_dir_vectors (bool): Whether apply L2 normalization to directional vectors before
+        pre_norm_vectors (bool): Whether apply L2 normalization to directional vectors before
             vector filed resize. Default: False.
+        post_norm_vectors (bool): Whether apply L2 normalization to directional vectors in output
+            vector filed. Default: False.
         init_cfg (dict or list[dict], optional): Initialization config dict.
     """
 
@@ -110,7 +112,8 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         ignore_index=255,
         sampler=None,
         align_corners=False,
-        norm_dir_vectors=False,
+        pre_norm_vectors=False,
+        post_norm_vectors=False,
         init_cfg=None,
     ) -> None:
         super().__init__(init_cfg or self.DEFAULT_INIT_CFG)
@@ -126,7 +129,8 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
 
         self.ignore_index = ignore_index
         self.align_corners = align_corners
-        self.norm_dir_vectors = norm_dir_vectors
+        self.pre_norm_vectors = pre_norm_vectors
+        self.post_norm_vectors = post_norm_vectors
 
         # 2 vector components per class
         self.out_channels = 2 * self.num_classes
@@ -238,7 +242,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         n, c, h, w = output.shape
         output = output.reshape(n, self.num_classes, 2, h, w)
 
-        if self.norm_dir_vectors:
+        if self.pre_norm_vectors:
             output = F.normalize(output, p=2, dim=2)
         return output
 
@@ -274,7 +278,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             test_cfg (dict): The testing config.
 
         Returns:
-            Tensor: Outputs segmentation logits map.
+            Tensor: Outputs direction vector field for each class.
         """
         dir_vectors = self.forward(inputs)
 
@@ -383,4 +387,8 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             size=size,
             mode='bilinear',
             align_corners=self.align_corners).reshape(n, k, c, h2, w2)
+
+        if self.post_norm_vectors:
+            dir_vectors = F.normalize(dir_vectors, p=2, dim=2)
+
         return dir_vectors
