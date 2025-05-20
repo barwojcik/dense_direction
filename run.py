@@ -52,7 +52,7 @@ def main():
 
     args: argparse.Namespace = parse_args()
     cfg: Config = Config.fromfile(args.config)
-    print(args.phase)
+
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
