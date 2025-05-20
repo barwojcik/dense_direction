@@ -47,10 +47,10 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
         This method transforms inputs and passes them through the optional normalization layer.
 
         Args:
-            inputs (Sequence[Tensor]): Input tensors of shape (N, C, H, W).
+            inputs (Sequence[Tensor]): List of input tensors.
 
         Returns:
-            features (Tensor): Output direction vector field for each class (N, K, 2, H, W).
+            features (Tensor): Output tensors of shape (N, C, H, W).
         """
         features = self._transform_inputs(inputs)
         if self.with_norm:
