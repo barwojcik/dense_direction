@@ -95,16 +95,16 @@ class Directioner(EncoderDecoder):
         Converts 2D vector field into angular values.
 
         Args:
-            vector_filed (Tensor): 2D vector field of shape (1, 2, H, W).
+            vector_filed (Tensor): Per class 2D vector field of shape (K, 2, H, W).
 
         Returns:
-            angles (Tensor): Direction angle values in radians (from π/2 to -π/2).
-                Shape (1, 1, H, W).
+            angles (Tensor): Per class direction angle values in radians (from π/2 to -π/2) of shape
+            (K, H, W).
         """
-        x_component: Tensor = vector_filed[:, 0, :, :]  # 1, H, W
-        y_component: Tensor = vector_filed[:, 1, :, :]  # 1, H, W
+        x_component: Tensor = vector_filed[:, 0, :, :]  # K, H, W
+        y_component: Tensor = vector_filed[:, 1, :, :]  # K, H, W
 
-        angles: Tensor = torch.atan2(x_component, y_component).unsqueeze(-1)  # 1, 1, H, W
+        angles: Tensor = torch.atan2(x_component, y_component)  # K, H, W
         angles = angles / 2
 
         return angles
@@ -129,7 +129,7 @@ class Directioner(EncoderDecoder):
            - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
                conversion into angles.
         """
-        batch_size, C, H, W = dir_vector_field.shape
+        batch_size, k, _, h1, w1 = dir_vector_field.shape
 
         if data_samples is None:
             data_samples = [SegDataSample() for _ in range(batch_size)]
@@ -146,9 +146,9 @@ class Directioner(EncoderDecoder):
                 else:
                     padding_size = img_meta["img_padding_size"]
                 padding_left, padding_right, padding_top, padding_bottom = padding_size
-                # i_dir_vfield shape is 1, C, H, W after remove padding
+                # i_dir_vfield shape is 1, k, 2, h, w after remove padding
                 i_dir_vfield = dir_vector_field[
-                    i : i + 1, :, padding_top : H - padding_bottom, padding_left : W - padding_right
+                    i : i + 1, :, :, padding_top : h1 - padding_bottom, padding_left : w1 - padding_right
                 ]
 
                 flip = img_meta.get("flip", None)
@@ -156,18 +156,19 @@ class Directioner(EncoderDecoder):
                     flip_direction = img_meta.get("flip_direction", None)
                     assert flip_direction in ["horizontal", "vertical"]
                     if flip_direction == "horizontal":
-                        i_dir_vfield = i_dir_vfield.flip(dims=(3,))
+                        i_dir_vfield = i_dir_vfield.flip(dims=(4,))
                     else:
-                        i_dir_vfield = i_dir_vfield.flip(dims=(2,))
+                        i_dir_vfield = i_dir_vfield.flip(dims=(3,))
 
                 # resize as original shape
+                h2, w2 = img_meta["ori_shape"]
                 i_dir_vfield = resize(
-                    i_dir_vfield,
+                    i_dir_vfield.view(1, k*2, h1, w1),
                     size=img_meta["ori_shape"],
                     mode="bilinear",
                     align_corners=self.align_corners,
                     warning=False,
-                ).squeeze(0)
+                ).reshape(k, 2, h2, w2)
             else:
                 i_dir_vfield = dir_vector_field[i]
 
