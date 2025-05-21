@@ -90,12 +90,12 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         init_cfg (dict or list[dict], optional): Initialization config dict.
     """
 
-    DEFAULT_ACT_CFG: dict = dict(type='ReLU')
-    DEFAULT_LOSS: dict = dict(type='DirectionalLoss')
+    DEFAULT_ACT_CFG: dict = dict(type="ReLU")
+    DEFAULT_LOSS: dict = dict(type="DirectionalLoss")
     DEFAULT_INIT_CFG: dict = dict(
-        type='Normal',
+        type="Normal",
         std=0.01,
-        override=dict(name='conv_dir'),
+        override=dict(name="conv_dir"),
     )
 
     def __init__(
@@ -103,21 +103,21 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         in_channels: int,
         channels: int,
         *,
-        dir_classes: Sequence[int]=None,
-        dropout_ratio: float=0.1,
-        conv_cfg: ConfigType=None,
-        norm_cfg: ConfigType=None,
-        act_cfg: ConfigType=None,
-        in_index: int | Sequence[int]=-1,
-        input_transform: str=None,
-        loss_decode: ConfigType=None,
-        ignore_index: int=255,
-        sampler: ConfigType=None,
-        align_corners: bool=False,
-        pre_norm_vectors: bool=False,
-        post_norm_vectors: bool=False,
-        gt_scale_factor: float=1.,
-        init_cfg: ConfigType=None,
+        dir_classes: Sequence[int] = None,
+        dropout_ratio: float = 0.1,
+        conv_cfg: ConfigType = None,
+        norm_cfg: ConfigType = None,
+        act_cfg: ConfigType = None,
+        in_index: int | Sequence[int] = -1,
+        input_transform: str = None,
+        loss_decode: ConfigType = None,
+        ignore_index: int = 255,
+        sampler: ConfigType = None,
+        align_corners: bool = False,
+        pre_norm_vectors: bool = False,
+        post_norm_vectors: bool = False,
+        gt_scale_factor: float = 1.0,
+        init_cfg: ConfigType = None,
     ) -> None:
         """
         Base class for direction estimation decoder heads.
@@ -214,8 +214,10 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             for loss in loss_decode:
                 self.loss_decode.append(build_loss(loss))
         else:
-            raise TypeError(f'loss_decode must be a dict or sequence of dict,\
-                but got {type(loss_decode)}')
+            raise TypeError(
+                f"loss_decode must be a dict or sequence of dict,\
+                but got {type(loss_decode)}"
+            )
 
         if sampler is not None:
             self.sampler = build_pixel_sampler(sampler, context=self)
@@ -230,8 +232,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
 
     def extra_repr(self):
         """Extra repr."""
-        s = f'input_transform={self.input_transform}, ' \
-            f'align_corners={self.align_corners}'
+        s = f"input_transform={self.input_transform}, " f"align_corners={self.align_corners}"
         return s
 
     def _init_inputs(self, in_channels, in_index, input_transform):
@@ -255,14 +256,14 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         """
 
         if input_transform is not None:
-            assert input_transform in ['resize_concat', 'multiple_select']
+            assert input_transform in ["resize_concat", "multiple_select"]
         self.input_transform = input_transform
         self.in_index = in_index
         if input_transform is not None:
             assert isinstance(in_channels, (list, tuple))
             assert isinstance(in_index, (list, tuple))
             assert len(in_channels) == len(in_index)
-            if input_transform == 'resize_concat':
+            if input_transform == "resize_concat":
                 self.in_channels = sum(in_channels)
             else:
                 self.in_channels = in_channels
@@ -282,17 +283,19 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             Tensor: The transformed inputs
         """
 
-        if self.input_transform == 'resize_concat':
+        if self.input_transform == "resize_concat":
             inputs = [inputs[i] for i in self.in_index]
             upsampled_inputs = [
                 resize(
                     input=x,
                     size=inputs[0].shape[2:],
-                    mode='bilinear',
-                    align_corners=self.align_corners) for x in inputs
+                    mode="bilinear",
+                    align_corners=self.align_corners,
+                )
+                for x in inputs
             ]
             inputs = torch.cat(upsampled_inputs, dim=1)
-        elif self.input_transform == 'multiple_select':
+        elif self.input_transform == "multiple_select":
             inputs = [inputs[i] for i in self.in_index]
         else:
             inputs = inputs[self.in_index]
@@ -317,8 +320,9 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             output = F.normalize(output, p=2, dim=2)
         return output
 
-    def loss(self, inputs: tuple[Tensor], batch_data_samples: SampleList,
-             train_cfg: ConfigType) -> dict:
+    def loss(
+        self, inputs: tuple[Tensor], batch_data_samples: SampleList, train_cfg: ConfigType
+    ) -> dict:
         """
         Forward function for training.
 
@@ -335,8 +339,9 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         losses = self.loss_by_feat(dir_vectors, batch_data_samples)
         return losses
 
-    def predict(self, inputs: tuple[Tensor], batch_img_metas: list[dict],
-                test_cfg: ConfigType) -> Tensor:
+    def predict(
+        self, inputs: tuple[Tensor], batch_img_metas: list[dict], test_cfg: ConfigType
+    ) -> Tensor:
         """
         Forward function for prediction.
 
@@ -389,13 +394,15 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         return resize(
             input=per_class_map.squeeze(2),
             scale_factor=self.gt_scale_factor,
-            mode='bilinear',
-            align_corners=self.align_corners
+            mode="bilinear",
+            align_corners=self.align_corners,
         ).unsqueeze(2)
 
     def _stack_batch_gt(self, batch_data_samples: SampleList) -> Tensor:
         """Stacks sematic segmentation ground truth maps into one batch."""
-        gt_semantic_segs: list[Tensor] = [data_sample.gt_sem_seg.data for data_sample in batch_data_samples]
+        gt_semantic_segs: list[Tensor] = [
+            data_sample.gt_sem_seg.data for data_sample in batch_data_samples
+        ]
         gt_sem_seg: Tensor = torch.stack(gt_semantic_segs, dim=0)
 
         per_class_gt_sem_seg: Tensor = self._transform_gt_sem_seg(gt_sem_seg)
@@ -405,8 +412,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
 
         return per_class_gt_sem_seg
 
-    def loss_by_feat(self, dir_vectors: Tensor,
-                     batch_data_samples: SampleList) -> dict:
+    def loss_by_feat(self, dir_vectors: Tensor, batch_data_samples: SampleList) -> dict:
         """
         Compute loss.
 
@@ -424,10 +430,11 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         n, k, c, h1, w1 = dir_vectors.shape
         h2, w2 = seg_label.shape[-2:]
         dir_vectors = resize(
-            input=dir_vectors.view(n, k*2, h1, w1),
+            input=dir_vectors.view(n, k * 2, h1, w1),
             size=(h2, w2),
-            mode='bilinear',
-            align_corners=self.align_corners).reshape(n, k, c, h2, w2)
+            mode="bilinear",
+            align_corners=self.align_corners,
+        ).reshape(n, k, c, h2, w2)
         if self.sampler is not None:
             seg_weight = self.sampler.sample(dir_vectors, seg_label)
         else:
@@ -440,21 +447,16 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         for loss_decode in losses_decode:
             if loss_decode.loss_name not in loss:
                 loss[loss_decode.loss_name] = loss_decode(
-                    dir_vectors,
-                    seg_label,
-                    weight=seg_weight,
-                    ignore_index=self.ignore_index)
+                    dir_vectors, seg_label, weight=seg_weight, ignore_index=self.ignore_index
+                )
             else:
                 loss[loss_decode.loss_name] += loss_decode(
-                    dir_vectors,
-                    seg_label,
-                    weight=seg_weight,
-                    ignore_index=self.ignore_index)
+                    dir_vectors, seg_label, weight=seg_weight, ignore_index=self.ignore_index
+                )
 
         return loss
 
-    def predict_by_feat(self, dir_vectors: Tensor,
-                        batch_img_metas: list[dict]) -> Tensor:
+    def predict_by_feat(self, dir_vectors: Tensor, batch_img_metas: list[dict]) -> Tensor:
         """
         Transforms a batch of output dir_vectors to the input shape.
 
@@ -467,21 +469,22 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             Tensor: Outputs direction vector field for each class.
         """
 
-        if isinstance(batch_img_metas[0]['img_shape'], torch.Size):
+        if isinstance(batch_img_metas[0]["img_shape"], torch.Size):
             # slide inference
-            size = batch_img_metas[0]['img_shape']
-        elif 'pad_shape' in batch_img_metas[0]:
-            size = batch_img_metas[0]['pad_shape'][:2]
+            size = batch_img_metas[0]["img_shape"]
+        elif "pad_shape" in batch_img_metas[0]:
+            size = batch_img_metas[0]["pad_shape"][:2]
         else:
-            size = batch_img_metas[0]['img_shape']
+            size = batch_img_metas[0]["img_shape"]
 
         n, k, c, h1, w1 = dir_vectors.shape
         h2, w2 = size
         dir_vectors = resize(
-            input=dir_vectors.view(n, k*2, h1, w1),
+            input=dir_vectors.view(n, k * 2, h1, w1),
             size=size,
-            mode='bilinear',
-            align_corners=self.align_corners).reshape(n, k, c, h2, w2)
+            mode="bilinear",
+            align_corners=self.align_corners,
+        ).reshape(n, k, c, h2, w2)
 
         if self.post_norm_vectors:
             dir_vectors = F.normalize(dir_vectors, p=2, dim=2)

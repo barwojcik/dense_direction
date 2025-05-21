@@ -148,7 +148,11 @@ class Directioner(EncoderDecoder):
                 padding_left, padding_right, padding_top, padding_bottom = padding_size
                 # i_dir_vfield shape is 1, k, 2, h, w after remove padding
                 i_dir_vfield = dir_vector_field[
-                    i : i + 1, :, :, padding_top : h1 - padding_bottom, padding_left : w1 - padding_right
+                    i : i + 1,
+                    :,
+                    :,
+                    padding_top : h1 - padding_bottom,
+                    padding_left : w1 - padding_right,
                 ]
 
                 flip = img_meta.get("flip", None)
@@ -163,7 +167,7 @@ class Directioner(EncoderDecoder):
                 # resize as original shape
                 h2, w2 = img_meta["ori_shape"]
                 i_dir_vfield = resize(
-                    i_dir_vfield.view(1, k*2, h1, w1),
+                    i_dir_vfield.view(1, k * 2, h1, w1),
                     size=img_meta["ori_shape"],
                     mode="bilinear",
                     align_corners=self.align_corners,
