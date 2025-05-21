@@ -134,7 +134,7 @@ class DirectionalLoss(nn.Module):
             input=gt_sem_seg.squeeze(2).float(),
             weight=self.transform_weights,
             padding=self.pad,
-        ).unsqueeze(2)
+        ).unsqueeze(1)
 
     def forward(self, pred_vector_field: Tensor, gt_sem_seg: Tensor, **kwargs) -> Tensor:
         """
@@ -158,7 +158,7 @@ class DirectionalLoss(nn.Module):
 
         loss = direction_weights * direction_values
         loss_mask = torch.where(gt_sem_seg > self.mask_thr, 1, 0)
-        loss = (loss * loss_mask).mean(1, keepdim=True)
+        loss = (loss * loss_mask).mean(2, keepdim=True)
         loss = loss.sum() / loss_mask.sum()
 
         return loss
