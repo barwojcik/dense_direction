@@ -71,7 +71,7 @@ class DirectionalLoss(nn.Module):
 
         transform_weights = self._get_kernels().unsqueeze(1).float()
         direction_bins = np.linspace(0, 1, div, endpoint=False)
-        direction_bins = torch.tensor(direction_bins).float().reshape(1, 1, div, 1, 1)
+        direction_bins = torch.tensor(direction_bins).float().reshape(1, div, 1, 1)
 
         self.register_buffer("transform_weights", transform_weights)
         self.register_buffer("direction_bins", direction_bins)
@@ -99,17 +99,17 @@ class DirectionalLoss(nn.Module):
         Converts 2D vector field into values in range from 0 to 1 that represent direction.
 
         Args:
-            predictions (Tensor): Per class 2D vector field of shape (N, K, 2, H, W).
+            predictions (Tensor): Per class 2D vector field of shape (N * K, 2, H, W).
 
         Returns:
             Tensor: Direction as values that range from 0 to 1.
         """
 
-        x_component = predictions[:, :, 0, ...]  # n, k, h, w
-        y_component = predictions[:, :, 1, ...]  # n, k, h, w
+        x_component = predictions[:, 0, ...]  # n * k, h, w
+        y_component = predictions[:, 1, ...]  # n * k, h, w
 
         # Angles in radians in range of pi to -pi
-        angles = torch.atan2(y_component, x_component).unsqueeze(2)  # n, k, 2, h, w
+        angles = torch.atan2(y_component, x_component).unsqueeze(1)  # n * k, 1, h, w
 
         # Direction as a range from 0 to 1 representing range 0 to pi (0 to 180 degrees)
         direction = (angles + self.pi) / (2 * self.pi)
@@ -131,10 +131,10 @@ class DirectionalLoss(nn.Module):
         """
 
         return F.conv2d(
-            input=gt_sem_seg.squeeze(2).float(),
+            input=gt_sem_seg.float(),
             weight=self.transform_weights,
             padding=self.pad,
-        ).unsqueeze(1)
+        )
 
     def forward(self, pred_vector_field: Tensor, gt_sem_seg: Tensor, **kwargs) -> Tensor:
         """
@@ -148,17 +148,20 @@ class DirectionalLoss(nn.Module):
         Returns:
             Tensor: Directional loss value.
         """
+        h, w = pred_vector_field.shape[-2:]
+        pred_vector_field = pred_vector_field.reshape(-1, 2, h, w)  # n * k, 2, h, w
 
-        pred_direction = self._convert_to_direction(pred_vector_field)
-        pred_direction = pred_direction.repeat(1, 1, self.div, 1, 1)
+        pred_direction = self._convert_to_direction(pred_vector_field)  # n * k, 1, h, w
+        pred_direction = pred_direction.repeat(1, self.div, 1, 1)  # n * k, div, h, w
         shifted_direction_bins = (self.direction_bins - pred_direction).abs()
         direction_weights = torch.sin(shifted_direction_bins * self.pi)
 
-        direction_values = self._transform_gt_sem_seg(gt_sem_seg)
+        gt_sem_seg = gt_sem_seg.reshape(-1, 1, h, w)  # n * k, 1, h, w
+        direction_values = self._transform_gt_sem_seg(gt_sem_seg)  # n * k, div, h, w
 
         loss = direction_weights * direction_values
         loss_mask = torch.where(gt_sem_seg > self.mask_thr, 1, 0)
-        loss = (loss * loss_mask).mean(2, keepdim=True)
+        loss = (loss * loss_mask).mean(1, keepdim=True)
         loss = loss.sum() / loss_mask.sum()
 
         return loss
