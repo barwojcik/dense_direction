@@ -32,7 +32,6 @@ class DirectionalLoss(nn.Module):
         loss_name (str, optional): Name of the loss. Default: "loss_dir".
     """
 
-
     DEFAULT_KERNEL_CFG = dict(type="circular_point_kernels")
 
     def __init__(
