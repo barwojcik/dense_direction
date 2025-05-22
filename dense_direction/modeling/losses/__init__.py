@@ -3,6 +3,6 @@
 from .kernels import *
 from .directional import DirectionalLoss
 from .efficient_directional import EfficientDirectionalLoss
-from .smoothness import *
+from .smoothness import SmoothnessLoss
 
-__all__ = ["DirectionalLoss", "EfficientDirectionalLoss"]
+__all__ = ["DirectionalLoss", "EfficientDirectionalLoss", "SmoothnessLoss"]
