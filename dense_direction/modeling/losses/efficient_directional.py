@@ -31,8 +31,8 @@ class EfficientDirectionalLoss(nn.Module):
         squish_values (bool, optional): Whether to squish values. Default: False.
         norm_values (bool, optional): Whether to normalize values. Default: False.
         norm_order (int, optional): Order of value normalization. Default: 1.
-        mask_kernels (bool, optional): Whether to mask kernels. Default: False.
-        kernel_thr (float, optional): Threshold for kernel masking. Default: 0.8.
+        mask_patches (bool, optional): Whether to mask patches. Default: False.
+        patch_thr (float, optional): Threshold for patch masking. Default: 0.8.
         kernel_cfg (ConfigType, optional): Kernel configuration.
             Default: 'dict(type="circular_point_kernels")'.
         loss_weight (float, optional): Loss weight. Default: 1.0.
@@ -49,8 +49,8 @@ class EfficientDirectionalLoss(nn.Module):
         squish_values: bool = False,
         norm_values: bool = False,
         norm_order: int = 1,
-        mask_kernels: bool = False,
-        kernel_thr=0.8,
+        mask_patches: bool = False,
+        patch_thr=0.8,
         kernel_cfg: ConfigType = None,
         loss_weight: float = 1.0,
         loss_name="loss_dir",
@@ -63,13 +63,13 @@ class EfficientDirectionalLoss(nn.Module):
         Args:
             pad (int, optional): Pad size for kernels. Default: 3.
             div (int, optional): Division factor for direction bins. Default: 20.
-            mask_thr (float, optional): Threshold for masking gt_sem_seg. Default: 0.5.
+            mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
             squish_values (bool, optional): Whether to squish values. Default: False.
             norm_values (bool, optional): Whether to normalize values. Default: False.
             norm_order (int, optional): Order of value normalization. Default: 1.
-            mask_kernels (bool, optional): Whether to mask kernels. Default: False.
-            kernel_thr (float, optional): Threshold for kernel computation. Default: 0.8.
-            kernel_cfg (ConfigType, optional): Kernel function configuration. 
+            mask_patches (bool, optional): Whether to mask patches. Default: False.
+            patch_thr (float, optional): Threshold for patch masking. Default: 0.8.
+            kernel_cfg (ConfigType, optional): Kernel configuration.
                 Default: 'dict(type="circular_point_kernels")'.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
@@ -82,8 +82,8 @@ class EfficientDirectionalLoss(nn.Module):
         self.squish_values = squish_values
         self.norm_values = norm_values
         self.norm_order = norm_order
-        self.mask_kernels = mask_kernels
-        self.kernel_thr = kernel_thr
+        self.mask_patches = mask_patches
+        self.patch_thr = patch_thr
         kernel_cfg = kernel_cfg or self.DEFAULT_KERNEL_CFG
         self.kernel_fn = FUNCTIONS.get(kernel_cfg.pop("type"))
         self.kernel_cfg = kernel_cfg
@@ -110,8 +110,6 @@ class EfficientDirectionalLoss(nn.Module):
             k_size=self.k_size,
             pad=self.pad,
             div=self.div,
-            mask_thr=self.mask_thr,
-            kernel_thr=self.kernel_thr,
             **self.kernel_cfg,
         ).reshape(self.div, -1)
 
@@ -137,7 +135,7 @@ class EfficientDirectionalLoss(nn.Module):
 
         return direction
 
-    def _get_patch_mask(self, gt_sem_seg: Tensor) -> Tensor:
+    def _get_loss_mask(self, gt_sem_seg: Tensor) -> Tensor:
         """
         Extracts indexes of a semantic segmentation map that meet the condition.
 
@@ -151,7 +149,7 @@ class EfficientDirectionalLoss(nn.Module):
         return torch.where(gt_sem_seg > self.mask_thr, 1, 0).view(-1).nonzero().squeeze()
 
     @torch.no_grad()
-    def _transform_gt_sem_seg(self, gt_sem_seg: Tensor, kernel_mask) -> tuple[Tensor, Tensor]:
+    def _transform_gt_sem_seg(self, gt_sem_seg: Tensor, kernel_mask) -> Tensor:
         """
         Transforms a ground truth semantic segmentation map into a map that contains direction
         values.
@@ -163,9 +161,8 @@ class EfficientDirectionalLoss(nn.Module):
                 transformation.
 
         Returns:
-            tuple[Tensor, Tensor]: Tuple containing transformed ground truth semantic segmentation
-                map of shape (len(kernel_mask), div) and mean patch value of shape
-                (len(kernel_mask), 1).
+            Tensor: Tensor containing transformed ground truth semantic segmentation map of shape
+                (len(kernel_mask), div).
         """
 
         map_patches = F.unfold(gt_sem_seg, self.k_size, padding=self.pad)  # n, k_size^2, k * h * w
@@ -177,7 +174,7 @@ class EfficientDirectionalLoss(nn.Module):
         return F.linear(
             input=filtered_map_patches,
             weight=self.transform_weights,
-        ), filtered_map_patches.mean(-1)
+        )
 
     @staticmethod
     def _squish_direction_values(direction_values: Tensor) -> Tensor:
@@ -188,7 +185,7 @@ class EfficientDirectionalLoss(nn.Module):
             direction_values (Tensor): Transformed ground truth semantic segmentation map.
 
         Returns:
-            Tensor: Transformed direction_values.
+            Tensor: Squished direction_values.
         """
         direction_values_min = direction_values.min(dim=-1, keepdim=True)[0]
         direction_values = (direction_values - direction_values_min) / (1 - direction_values_min)
@@ -202,7 +199,7 @@ class EfficientDirectionalLoss(nn.Module):
             direction_values (Tensor): Transformed ground truth semantic segmentation map.
 
         Returns:
-            Tensor: Transformed direction_values.
+            Tensor: Normalized direction_values.
         """
         direction_values_norm = torch.linalg.vector_norm(
             direction_values, ord=self.norm_order, dim=-1, keepdim=True
@@ -210,17 +207,18 @@ class EfficientDirectionalLoss(nn.Module):
         direction_values /= direction_values_norm
         return direction_values
 
-    def _get_kernel_mask(self, patch_values: Tensor) -> Tensor:
+    def _get_patch_mask(self, direction_values: Tensor) -> Tensor:
         """
         Extracts indexes of patches that meet the condition.
 
         Args:
-            patch_values (Tensor): Mean values of patches.
+            direction_values (Tensor): Transformed ground truth semantic segmentation map.
 
         Returns:
             Tensor: Indexes of patch_values eligible for loss calculation.
         """
-        return torch.where(patch_values > self.kernel_thr, 0, 1).nonzero().squeeze()
+        patch_values = direction_values.mean(dim=-1)
+        return torch.where(patch_values > self.patch_thr, 0, 1).nonzero().squeeze()
 
     def forward(
         self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
@@ -244,21 +242,20 @@ class EfficientDirectionalLoss(nn.Module):
         n, k, _, h, w = gt_sem_seg.shape
         gt_sem_seg = gt_sem_seg.squeeze(2)  # n, k, 1, h, w -> n, k, h, w
 
-        patch_mask = self._get_patch_mask(gt_sem_seg)
-        direction_values, patch_values = self._transform_gt_sem_seg(gt_sem_seg, patch_mask)
+        loss_mask = self._get_loss_mask(gt_sem_seg)
+        direction_values = self._transform_gt_sem_seg(gt_sem_seg, loss_mask)
+        filtered_pred = pred_direction.index_select(dim=0, index=loss_mask)
+
+        if self.mask_patches:
+            patch_mask = self._get_patch_mask(direction_values)
+            direction_values = direction_values.index_select(dim=0, index=patch_mask)
+            filtered_pred = filtered_pred.index_select(dim=0, index=patch_mask)
 
         if self.squish_values:
             direction_values = self._squish_direction_values(direction_values)
 
         if self.norm_values:
             direction_values = self._norm_direction_values(direction_values)
-
-        filtered_pred = pred_direction.index_select(dim=0, index=patch_mask)
-
-        if self.mask_kernels:
-            kernel_mask = self._get_kernel_mask(patch_values)
-            direction_values = direction_values.index_select(dim=0, index=kernel_mask)
-            filtered_pred = filtered_pred.index_select(dim=0, index=kernel_mask)
 
         filtered_pred = filtered_pred.unsqueeze(-1).repeat(1, self.div)
         shifted_direction_bins = (self.direction_bins - filtered_pred).abs()

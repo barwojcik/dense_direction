@@ -25,10 +25,15 @@ class DirectionalLoss(nn.Module):
     Args:
         pad (int, optional): Pad size for kernels. Default: 3.
         div (int, optional): Division factor for direction bins. Default: 20.
-        mask_thr (float, optional): Threshold for masking pixels. Default: 0.5.
-        kernel_thr (float, optional): Threshold for kernel computation. Default: 0.8.
+        mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
+        squish_values (bool, optional): Whether to squish values. Default: False.
+        norm_values (bool, optional): Whether to normalize values. Default: False.
+        norm_order (int, optional): Order of value normalization. Default: 1.
+        mask_patches (bool, optional): Whether to mask patches. Default: False.
+        patch_thr (float, optional): Threshold for patch masking. Default: 0.8.
         kernel_cfg (ConfigType, optional): Kernel configuration.
             Default: 'dict(type="circular_point_kernels")'.
+        loss_weight (float, optional): Loss weight. Default: 1.0.
         loss_name (str, optional): Name of the loss. Default: "loss_dir".
     """
 
@@ -39,8 +44,13 @@ class DirectionalLoss(nn.Module):
         pad=3,
         div=20,
         mask_thr=0.5,
-        kernel_thr=0.8,
+        squish_values: bool = False,
+        norm_values: bool = False,
+        norm_order: int = 1,
+        mask_patches: bool = False,
+        patch_thr=0.8,
         kernel_cfg: ConfigType = None,
+        loss_weight: float = 1.0,
         loss_name="loss_dir",
         **kwargs,
     ) -> None:
@@ -51,10 +61,15 @@ class DirectionalLoss(nn.Module):
         Args:
             pad (int, optional): Pad size for kernels. Default: 3.
             div (int, optional): Division factor for direction bins. Default: 20.
-            mask_thr (float, optional): Threshold for masking gt_sem_seg. Default: 0.5.
-            kernel_thr (float, optional): Threshold for kernel computation. Default: 0.8.
-            kernel_cfg (ConfigType, optional): Kernel function configuration. 
+            mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
+            squish_values (bool, optional): Whether to squish values. Default: False.
+            norm_values (bool, optional): Whether to normalize values. Default: False.
+            norm_order (int, optional): Order of value normalization. Default: 1.
+            mask_patches (bool, optional): Whether to mask patches. Default: False.
+            patch_thr (float, optional): Threshold for patch masking. Default: 0.8
+            kernel_cfg (ConfigType, optional): Kernel configuration.
                 Default: 'dict(type="circular_point_kernels")'.
+            loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
 
@@ -62,10 +77,15 @@ class DirectionalLoss(nn.Module):
         self.pad = pad
         self.div = div
         self.mask_thr = mask_thr
-        self.kernel_thr = kernel_thr
+        self.squish_values = squish_values
+        self.norm_values = norm_values
+        self.norm_order = norm_order
+        self.mask_patches = mask_patches
+        self.patch_thr = patch_thr
         kernel_cfg = kernel_cfg or self.DEFAULT_KERNEL_CFG
         self.kernel_fn = FUNCTIONS.get(kernel_cfg.pop("type"))
         self.kernel_cfg = kernel_cfg
+        self.loss_weight = loss_weight
         self._loss_name = loss_name
 
         transform_weights = self._get_kernels().unsqueeze(1).float()
@@ -88,8 +108,6 @@ class DirectionalLoss(nn.Module):
             k_size=self.k_size,
             pad=self.pad,
             div=self.div,
-            mask_thr=self.mask_thr,
-            kernel_thr=self.kernel_thr,
             **self.kernel_cfg,
         )
 
@@ -135,7 +153,70 @@ class DirectionalLoss(nn.Module):
             padding=self.pad,
         )
 
-    def forward(self, pred_vector_field: Tensor, gt_sem_seg: Tensor, **kwargs) -> Tensor:
+    def _get_loss_mask(self, gt_sem_seg: Tensor) -> Tensor:
+        """
+        Computes loss mask.
+
+        Args:
+            gt_sem_seg (Tensor): Ground truth semantic segmentation map of shape (N * K, 1, H, W).
+
+        Returns:
+            Tensor: Loss mask of shape (N * K, 1, H, W).
+        """
+        return torch.where(gt_sem_seg > self.mask_thr, 1, 0)
+
+    def _get_patch_mask(self, direction_values: Tensor) -> Tensor:
+        """
+        Computes patch mask.
+
+        Args:
+            direction_values (Tensor): Transformed ground truth semantic segmentation map of
+                shape (N * K, div, H, W).
+
+        Returns:
+            Tensor: Patch mask of shape (N * K, 1, H, W).
+        """
+        patch_values = direction_values.mean(dim=1, keepdim=True)
+        return torch.where(patch_values > self.patch_thr, 0, 1)
+
+    @staticmethod
+    def _squish_direction_values(direction_values: Tensor) -> Tensor:
+        """
+        Changes the range of direction values form 0-1 to min-1.
+
+        Args:
+            direction_values (Tensor): Transformed ground truth semantic segmentation map of
+                shape (N * K, div, H, W).
+
+        Returns:
+            Tensor: Squished direction_values.
+        """
+        direction_values_min = direction_values.min(dim=1, keepdim=True)[0]
+        direction_values = (direction_values - direction_values_min) / (1 - direction_values_min)
+        direction_values = torch.nan_to_num(direction_values, 0)
+        return direction_values
+
+    def _norm_direction_values(self, direction_values: Tensor) -> Tensor:
+        """
+        Normalizes direction values.
+
+        Args:
+            direction_values (Tensor): Transformed ground truth semantic segmentation map of
+                shape (N * K, div, H, W).
+
+        Returns:
+            Tensor: Normalized direction_values.
+        """
+        direction_values_norm = torch.linalg.vector_norm(
+            direction_values, ord=self.norm_order, dim=1, keepdim=True
+        )
+        direction_values /= direction_values_norm
+        direction_values = torch.nan_to_num(direction_values, 0)
+        return direction_values
+
+    def forward(
+            self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
+    ) -> Tensor:
         """
         Computes directional loss.
 
@@ -143,6 +224,7 @@ class DirectionalLoss(nn.Module):
             pred_vector_field (Tensor): Per class 2D vector field of shape (N, K, 2, H, W).
             gt_sem_seg (Tensor): Per class ground truth semantic segmentation map of
                 shape (N, K, 1, H, W).
+            weight (float, optional): Optional weight for directional loss value.
 
         Returns:
             Tensor: Directional loss value.
@@ -152,18 +234,29 @@ class DirectionalLoss(nn.Module):
 
         pred_direction = self._convert_to_direction(pred_vector_field)  # n * k, 1, h, w
         pred_direction = pred_direction.repeat(1, self.div, 1, 1)  # n * k, div, h, w
+
         shifted_direction_bins = (self.direction_bins - pred_direction).abs()
         direction_weights = torch.sin(shifted_direction_bins * self.pi)
 
         gt_sem_seg = gt_sem_seg.reshape(-1, 1, h, w)  # n * k, 1, h, w
         direction_values = self._transform_gt_sem_seg(gt_sem_seg)  # n * k, div, h, w
 
+        loss_mask = self._get_loss_mask(gt_sem_seg)
+        if self.mask_patches:
+            patch_mask = self._get_patch_mask(direction_values)
+            loss_mask = loss_mask * patch_mask
+
+        if self.squish_values:
+            direction_values = self._squish_direction_values(direction_values)
+
+        if self.norm_values:
+            direction_values = self._norm_direction_values(direction_values)
+
         loss = direction_weights * direction_values
-        loss_mask = torch.where(gt_sem_seg > self.mask_thr, 1, 0)
         loss = (loss * loss_mask).mean(1, keepdim=True)
         loss = loss.sum() / loss_mask.sum()
 
-        return loss
+        return loss * (weight or self.loss_weight)
 
     @property
     def loss_name(self):
