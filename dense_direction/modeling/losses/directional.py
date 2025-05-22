@@ -4,6 +4,8 @@ Directional loss class.
 This module contains DirectionalLoss.
 """
 
+from typing import Callable
+
 import numpy as np
 import torch
 from torch import Tensor
@@ -41,17 +43,17 @@ class DirectionalLoss(nn.Module):
 
     def __init__(
         self,
-        pad=3,
-        div=20,
-        mask_thr=0.5,
+        pad: int=3,
+        div: int=20,
+        mask_thr: float=0.5,
         squish_values: bool = False,
         norm_values: bool = False,
         norm_order: int = 1,
         mask_patches: bool = False,
-        patch_thr=0.8,
+        patch_thr: float=0.8,
         kernel_cfg: ConfigType = None,
         loss_weight: float = 1.0,
-        loss_name="loss_dir",
+        loss_name: str="loss_dir",
         **kwargs,
     ) -> None:
         super().__init__()
@@ -73,27 +75,27 @@ class DirectionalLoss(nn.Module):
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
 
-        self.k_size = 2 * pad + 1
-        self.pad = pad
-        self.div = div
-        self.mask_thr = mask_thr
-        self.squish_values = squish_values
-        self.norm_values = norm_values
-        self.norm_order = norm_order
-        self.mask_patches = mask_patches
-        self.patch_thr = patch_thr
-        kernel_cfg = kernel_cfg or self.DEFAULT_KERNEL_CFG
-        self.kernel_fn = FUNCTIONS.get(kernel_cfg.pop("type"))
-        self.kernel_cfg = kernel_cfg
-        self.loss_weight = loss_weight
-        self._loss_name = loss_name
+        self.k_size: int = 2 * pad + 1
+        self.pad: int = pad
+        self.div: int = div
+        self.mask_thr: float = mask_thr
+        self.squish_values: bool = squish_values
+        self.norm_values: bool = norm_values
+        self.norm_order: int | str = norm_order
+        self.mask_patches: bool = mask_patches
+        self.patch_thr: float = patch_thr
+        kernel_cfg: ConfigType = kernel_cfg or self.DEFAULT_KERNEL_CFG
+        self.kernel_fn: Callable = FUNCTIONS.get(kernel_cfg.pop("type"))
+        self.kernel_cfg: ConfigType = kernel_cfg
+        self.loss_weight: float = loss_weight
+        self._loss_name: str = loss_name
 
-        transform_weights = self._get_kernels().unsqueeze(1).float()
+        transform_weights = self._get_kernels().unsqueeze(1)
         direction_bins = np.linspace(0, 1, div, endpoint=False)
-        direction_bins = torch.tensor(direction_bins).float().reshape(1, div, 1, 1)
+        direction_bins = torch.tensor(direction_bins).reshape(1, div, 1, 1)
 
-        self.register_buffer("transform_weights", transform_weights)
-        self.register_buffer("direction_bins", direction_bins)
+        self.register_buffer("transform_weights", transform_weights.float())
+        self.register_buffer("direction_bins", direction_bins.float())
         self.register_buffer("pi", torch.tensor(np.pi).float())
 
     def _get_kernels(self) -> torch.Tensor:
