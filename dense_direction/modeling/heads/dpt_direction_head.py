@@ -119,7 +119,7 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         assert self.num_fusion_blocks == self.num_reassemble_blocks
         assert self.num_reassemble_blocks == self.num_post_process_channels
 
-    def forward(self, inputs):
+    def forward(self, inputs: Sequence[Tensor]) -> Tensor:
         """
         Forward pass through the decode head.
 

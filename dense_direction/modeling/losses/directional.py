@@ -43,17 +43,17 @@ class DirectionalLoss(nn.Module):
 
     def __init__(
         self,
-        pad: int=3,
-        div: int=20,
-        mask_thr: float=0.5,
+        pad: int = 3,
+        div: int = 20,
+        mask_thr: float = 0.5,
         squish_values: bool = False,
         norm_values: bool = False,
         norm_order: int = 1,
         mask_patches: bool = False,
-        patch_thr: float=0.8,
+        patch_thr: float = 0.8,
         kernel_cfg: ConfigType = None,
         loss_weight: float = 1.0,
-        loss_name: str="loss_dir",
+        loss_name: str = "loss_dir",
         **kwargs,
     ) -> None:
         super().__init__()
@@ -217,7 +217,7 @@ class DirectionalLoss(nn.Module):
         return direction_values
 
     def forward(
-            self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
+        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
     ) -> Tensor:
         """
         Computes directional loss.
