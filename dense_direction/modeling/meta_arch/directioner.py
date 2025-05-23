@@ -182,6 +182,7 @@ class Directioner(EncoderDecoder):
                 {
                     "estimated_vs": PixelData(**{"data": i_dir_vfield}),
                     "estimated_dirs": PixelData(**{"data": i_dir_angles}),
+                    "dir_classes": self.decode_head.dir_classes,
                 }
             )
 
