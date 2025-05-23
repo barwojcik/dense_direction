@@ -241,10 +241,9 @@ class EfficientDirectionalLoss(nn.Module):
         pred_direction = self._convert_to_direction(pred_vector_field)  # n, k, 1, h, w
         pred_direction = pred_direction.view(-1)  # n * k * h * w
 
-        n, k, _, h, w = gt_sem_seg.shape
         gt_sem_seg = gt_sem_seg.squeeze(2)  # n, k, 1, h, w -> n, k, h, w
-
         loss_mask = self._get_loss_mask(gt_sem_seg)
+
         direction_values = self._transform_gt_sem_seg(gt_sem_seg, loss_mask)
         filtered_pred = pred_direction.index_select(dim=0, index=loss_mask)
 

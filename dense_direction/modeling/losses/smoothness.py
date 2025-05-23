@@ -89,7 +89,7 @@ class SmoothnessLoss(nn.Module):
         neighborhood_vectors = neighborhood_patches.view(n * k, 2, self.k_size**2, -1).sum(dim=2)
         neighborhood_vectors = neighborhood_vectors.reshape(n * k, 2, h, w) - masked_vector_field
 
-        loss = F.cosine_similarity(neighborhood_vectors, masked_vector_field, dim=1)
+        loss = F.cosine_similarity(masked_vector_field, neighborhood_vectors, dim=1)
         loss = (0.5 * (1 - loss))**2
         loss = loss.unsqueeze(1) * loss_mask
         loss = loss.sum() / loss_mask.sum()
