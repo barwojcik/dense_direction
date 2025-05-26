@@ -99,7 +99,7 @@ def radial_line_kernels(
     kernels = np.where(kernels > 0, kernels, 0)
     kernels = np.where(center_distances > pad, 0, kernels)
     kernels = kernels * dists_weights
+    kernels = kernels[:, :, ::-1]
     kernels = kernels / kernels.sum(axis=(-1, -2), keepdims=True)
-    kernels = kernels[:,:,::-1]
 
     return torch.as_tensor(kernels)
