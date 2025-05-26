@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch import Tensor
 from mmengine import FUNCTIONS
-from utils import get_coordinates
+from .utils import get_coordinates
 
 __all__ = [
     "circular_point_kernels",
