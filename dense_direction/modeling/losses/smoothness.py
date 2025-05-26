@@ -20,9 +20,10 @@ class SmoothnessLoss(nn.Module):
     This class implements the smoothness loss.
 
     Args:
-        pad (int, optional): Pad size for kernels. Default: 3.
+        pad (int, optional): Pad size for kernels. It's used to calculate kernel size as
+                2 * pad + 1, default: 3.
         mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
-        alpha (float, optional): Alpha parameter for smoothness loss. Default: 2.0.
+        alpha (float, optional): The exponent parameter for smoothness loss. Default: 2.0.
         loss_weight (float, optional): Loss weight. Default: 1.0.
         loss_name (str, optional): Name of the loss. Default: "loss_dir".
     """
@@ -40,9 +41,10 @@ class SmoothnessLoss(nn.Module):
         Initializes the SmoothnessLoss class.
 
         Args:
-            pad (int, optional): Pad size for kernels. Default: 3.
+            pad (int, optional): Pad size for kernels. It's used to calculate kernel size as
+                2 * pad + 1, default: 3.
             mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
-            alpha (float, optional): Alpha parameter for smoothness loss. Default: 2.0.
+            alpha (float, optional): The exponent parameter for smoothness loss. Default: 2.0.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
