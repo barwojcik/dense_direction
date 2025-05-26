@@ -22,6 +22,7 @@ class SmoothnessLoss(nn.Module):
     Args:
         pad (int, optional): Pad size for kernels. Default: 3.
         mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
+        alpha (float, optional): Alpha parameter for smoothness loss. Default: 2.0.
         loss_weight (float, optional): Loss weight. Default: 1.0.
         loss_name (str, optional): Name of the loss. Default: "loss_dir".
     """
@@ -30,6 +31,7 @@ class SmoothnessLoss(nn.Module):
         self,
         pad: int = 1,
         mask_thr: float = 0.5,
+        alpha: float = 2.0,
         loss_weight: float = 1.0,
         loss_name="loss_smth",
         **kwargs,
@@ -40,6 +42,7 @@ class SmoothnessLoss(nn.Module):
         Args:
             pad (int, optional): Pad size for kernels. Default: 3.
             mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
+            alpha (float, optional): Alpha parameter for smoothness loss. Default: 2.0.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
@@ -48,6 +51,7 @@ class SmoothnessLoss(nn.Module):
         self.pad = pad
         self.k_size = 2 * pad + 1
         self.mask_thr: float = mask_thr
+        self.alpha: float = alpha
         self.loss_weight: float = loss_weight
         self._loss_name: str = loss_name
 
@@ -90,7 +94,7 @@ class SmoothnessLoss(nn.Module):
         neighborhood_vectors = neighborhood_vectors.reshape(n * k, 2, h, w) - masked_vector_field
 
         loss = F.cosine_similarity(masked_vector_field, neighborhood_vectors, dim=1)
-        loss = (0.5 * (1 - loss))**2
+        loss = (0.5 * (1 - loss))**self.alpha
         loss = loss.unsqueeze(1) * loss_mask
         loss = loss.sum() / loss_mask.sum()
 
