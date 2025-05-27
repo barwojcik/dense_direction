@@ -489,4 +489,4 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         if self.post_norm_vectors:
             dir_vectors = F.normalize(dir_vectors, p=2, dim=2)
 
-        return dir_vectors
+        return dir_vectors.reshape(n, k*c, h2, w2)
