@@ -217,7 +217,7 @@ class DirectionalLoss(nn.Module):
         return direction_values
 
     def forward(
-        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
+        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = 1.0, **kwargs
     ) -> Tensor:
         """
         Computes directional loss.
@@ -258,7 +258,7 @@ class DirectionalLoss(nn.Module):
         loss = (loss * loss_mask).mean(1, keepdim=True)
         loss = loss.sum() / loss_mask.sum()
 
-        return loss * (weight or self.loss_weight)
+        return loss * self.loss_weight * weight
 
     @property
     def loss_name(self):

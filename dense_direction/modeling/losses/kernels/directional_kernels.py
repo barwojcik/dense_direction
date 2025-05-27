@@ -37,7 +37,7 @@ def circular_point_kernels(
     Returns:
         Tensor: Tensor of shape (div, k_size, k_size).
     """
-    assert threshold >= 1, "Distance threshold must be > 1."
+    assert threshold >= 1, "Distance threshold must be >= 1."
     k_size = 2*pad+1
 
     def compute_kernels(cords: np.ndarray, points: np.ndarray, threshold:float) -> np.ndarray:
@@ -82,7 +82,7 @@ def radial_line_kernels(
     Returns:
         Tensor: Tensor of shape (div, k_size, k_size), where k_size = 2 * pad +1.
     """
-    assert threshold >= 1, "Distance threshold must be > 1."
+    assert threshold >= 1, "Distance threshold must be >= 1."
     k_size = 2 * pad + 1
 
     cords = get_coordinates(k_size)

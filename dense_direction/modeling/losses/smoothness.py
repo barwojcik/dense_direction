@@ -70,7 +70,7 @@ class SmoothnessLoss(nn.Module):
         return torch.where(gt_sem_seg > self.mask_thr, 1, 0)
 
     def forward(
-        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
+        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = 1., **kwargs
     ) -> Tensor:
         """
         Computes smoothness loss.
@@ -100,7 +100,7 @@ class SmoothnessLoss(nn.Module):
         loss = loss.unsqueeze(1) * loss_mask
         loss = loss.sum() / loss_mask.sum()
 
-        return loss * (weight or self.loss_weight)
+        return loss * self.loss_weight * weight
 
     @property
     def loss_name(self):
