@@ -40,7 +40,7 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
         if self.with_norm:
             _, self.norm = build_norm_layer(self.norm_cfg, self.in_channels)
 
-    def _layers(self, inputs: Sequence[Tensor]) -> Tensor:
+    def layers(self, inputs: Sequence[Tensor]) -> Tensor:
         """
         Forward pass through the linear deocde head layers.
 
@@ -68,7 +68,7 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
         Returns:
             outputs (Tensor): Output direction vector field for each class (N, K, 2, H, W).
         """
-        features = self._layers(inputs)
+        features = self.layers(inputs)
         outputs = self.estimate_directions(features)
 
         return outputs

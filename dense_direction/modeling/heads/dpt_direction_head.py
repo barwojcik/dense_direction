@@ -8,7 +8,6 @@ mmseg's DPTHead.
 import math
 from typing import Sequence
 
-import torch
 from torch import Tensor
 import torch.nn as nn
 
@@ -119,6 +118,28 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         assert self.num_fusion_blocks == self.num_reassemble_blocks
         assert self.num_reassemble_blocks == self.num_post_process_channels
 
+    def layers(self, inputs: Sequence[Tensor]) -> Tensor:
+        """
+        Forward pass through the DPT deocde head layers.
+
+        This method transforms inputs and passes them through head's layers.
+
+        Args:
+            inputs (Sequence[Tensor]): List of input tensors.
+
+        Returns:
+            features (Tensor): Output tensors of shape (N, C, H, W).
+        """
+        assert len(inputs) == self.num_reassemble_blocks
+        x = self._transform_inputs(inputs)
+        x = self.reassemble_blocks(x)
+        x = [self.convs[i](feature) for i, feature in enumerate(x)]
+        out = self.fusion_blocks[0](x[-1])
+        for i in range(1, len(self.fusion_blocks)):
+            out = self.fusion_blocks[i](out, x[-(i + 1)])
+        out = self.project(out)
+        return out
+
     def forward(self, inputs: Sequence[Tensor]) -> Tensor:
         """
         Forward pass through the decode head.
@@ -129,13 +150,6 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         Returns:
             outputs (Tensor): Output direction vector field for each class (N, K, 2, H, W).
         """
-        assert len(inputs) == self.num_reassemble_blocks
-        x = self._transform_inputs(inputs)
-        x = self.reassemble_blocks(x)
-        x = [self.convs[i](feature) for i, feature in enumerate(x)]
-        out = self.fusion_blocks[0](x[-1])
-        for i in range(1, len(self.fusion_blocks)):
-            out = self.fusion_blocks[i](out, x[-(i + 1)])
-        out = self.project(out)
+        out = self.layers(inputs)
         out = self.estimate_directions(out)
         return out

@@ -39,7 +39,7 @@ class LinearHead(BaseDecodeHead):
         if self.with_norm:
             _, self.norm = build_norm_layer(self.norm_cfg, self.in_channels)
 
-    def _layers(self, inputs: Sequence[Tensor]) -> Tensor:
+    def layers(self, inputs: Sequence[Tensor]) -> Tensor:
         """
         Forward pass through the linear deocde head layers.
 
@@ -67,7 +67,7 @@ class LinearHead(BaseDecodeHead):
         Returns:
             outputs (Tensor): Output tensor with clas logits.
         """
-        features = self._layers(inputs)
+        features = self.layers(inputs)
         outputs = self.cls_seg(features)
 
         return outputs
