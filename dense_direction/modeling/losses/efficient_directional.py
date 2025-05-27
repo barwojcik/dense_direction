@@ -223,7 +223,7 @@ class EfficientDirectionalLoss(nn.Module):
         return torch.where(patch_values > self.patch_thr, 0, 1).nonzero().squeeze()
 
     def forward(
-        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = 1., **kwargs
+        self, pred_vector_field: Tensor, gt_sem_seg: Tensor, weight: float = None, **kwargs
     ) -> Tensor:
         """
         Computes directional loss.
@@ -263,7 +263,7 @@ class EfficientDirectionalLoss(nn.Module):
         direction_weights = torch.sin(shifted_direction_bins * self.pi)
 
         loss = direction_weights * direction_values
-        loss = loss.mean() * self.loss_weight * weight
+        loss = loss.mean() * self.loss_weight * (weight or 1.)
 
         return loss
 

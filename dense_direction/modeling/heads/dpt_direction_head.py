@@ -86,7 +86,7 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
 
         super().__init__(**kwargs)
         post_process_channels = post_process_channels or self.DEFAULT_PP_CHANNELS
-        self.in_channels = self.in_channels
+
         self.expand_channels = expand_channels
         self.reassemble_blocks = ReassembleBlocks(
             embed_dims, post_process_channels, readout_type, patch_size
