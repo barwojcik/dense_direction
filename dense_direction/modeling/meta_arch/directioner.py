@@ -109,7 +109,7 @@ class Directioner(EncoderDecoder):
         x_component: Tensor = vector_filed[:, 0, :, :]  # K, H, W
         y_component: Tensor = vector_filed[:, 1, :, :]  # K, H, W
 
-        angles: Tensor = torch.atan2(x_component, y_component)  # K, H, W
+        angles: Tensor = torch.atan2(y_component, x_component)  # K, H, W
         angles = (angles + self.pi) / 2
 
         return angles
