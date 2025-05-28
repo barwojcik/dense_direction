@@ -56,7 +56,7 @@ def circular_point_kernels(
 
     kernels = compute_kernels(cords, half_points, threshold)
     kernels += compute_kernels(cords, -half_points, threshold)
-    kernels = kernels.transpose(0, 2, 1)[..., ::-1]
+    kernels = kernels[..., ::-1]
 
     return torch.as_tensor(kernels / 2)
 
@@ -99,6 +99,7 @@ def radial_line_kernels(
     kernels = np.where(kernels > 0, kernels, 0)
     kernels = np.where(center_distances > pad, 0, kernels)
     kernels = kernels * dists_weights
+    kernels = kernels.transpose(0, 2, 1)
     kernels = kernels[:, :, ::-1]
     kernels = kernels / kernels.sum(axis=(-1, -2), keepdims=True)
 
