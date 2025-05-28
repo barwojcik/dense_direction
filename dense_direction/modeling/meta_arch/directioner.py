@@ -7,6 +7,7 @@ to direction estimation.
 
 from typing import Optional
 
+import numpy as np
 import torch
 from torch import Tensor
 
@@ -83,29 +84,33 @@ class Directioner(EncoderDecoder):
             pretrained=pretrained,
             init_cfg=init_cfg,
         )
+        self.register_buffer("pi", torch.tensor(np.pi).float())
 
     def _init_decode_head(self, decode_head: ConfigType) -> None:
         """Initialize ``decode_head``"""
         self.decode_head = MODELS.build(decode_head)
         self.align_corners = self.decode_head.align_corners
+        self.out_channels = 2 * len(self.decode_head.dir_classes)
 
-    @staticmethod
-    def _convert_to_angles(vector_filed: Tensor) -> Tensor:
+    def _convert_to_angles(self, vector_filed: Tensor) -> Tensor:
         """
         Converts 2D vector field into angular values.
 
         Args:
-            vector_filed (Tensor): Per class 2D vector field of shape (K, 2, H, W).
+            vector_filed (Tensor): Per class 2D vector field of shape (K*2, H, W).
 
         Returns:
-            angles (Tensor): Per class direction angle values in radians (from π/2 to -π/2) of shape
+            angles (Tensor): Per class direction angle values in radians (from 0 to π) of shape
             (K, H, W).
         """
+        h, w = vector_filed.shape[-2:]
+        vector_filed = vector_filed.reshape(-1, 2, h, w)  # 2K, H, W -> K, 2, H, W
+
         x_component: Tensor = vector_filed[:, 0, :, :]  # K, H, W
         y_component: Tensor = vector_filed[:, 1, :, :]  # K, H, W
 
         angles: Tensor = torch.atan2(x_component, y_component)  # K, H, W
-        angles = angles / 2
+        angles = (angles + self.pi) / 2
 
         return angles
 
@@ -129,7 +134,7 @@ class Directioner(EncoderDecoder):
            - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
                conversion into angles.
         """
-        batch_size, k, _, h1, w1 = dir_vector_field.shape
+        batch_size, c, h, w = dir_vector_field.shape
 
         if data_samples is None:
             data_samples = [SegDataSample() for _ in range(batch_size)]
@@ -146,13 +151,12 @@ class Directioner(EncoderDecoder):
                 else:
                     padding_size = img_meta["img_padding_size"]
                 padding_left, padding_right, padding_top, padding_bottom = padding_size
-                # i_dir_vfield shape is 1, k, 2, h, w after remove padding
+                # i_dir_vfield shape is 1, c, h, w after remove padding
                 i_dir_vfield = dir_vector_field[
                     i : i + 1,
                     :,
-                    :,
-                    padding_top : h1 - padding_bottom,
-                    padding_left : w1 - padding_right,
+                    padding_top : h - padding_bottom,
+                    padding_left : w - padding_right,
                 ]
 
                 flip = img_meta.get("flip", None)
@@ -160,19 +164,17 @@ class Directioner(EncoderDecoder):
                     flip_direction = img_meta.get("flip_direction", None)
                     assert flip_direction in ["horizontal", "vertical"]
                     if flip_direction == "horizontal":
-                        i_dir_vfield = i_dir_vfield.flip(dims=(4,))
-                    else:
                         i_dir_vfield = i_dir_vfield.flip(dims=(3,))
+                    else:
+                        i_dir_vfield = i_dir_vfield.flip(dims=(2,))
 
-                # resize as original shape
-                h2, w2 = img_meta["ori_shape"]
                 i_dir_vfield = resize(
-                    i_dir_vfield.view(1, k * 2, h1, w1),
+                    i_dir_vfield,
                     size=img_meta["ori_shape"],
                     mode="bilinear",
                     align_corners=self.align_corners,
                     warning=False,
-                ).reshape(k, 2, h2, w2)
+                ).squeeze()
             else:
                 i_dir_vfield = dir_vector_field[i]
 
