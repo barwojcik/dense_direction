@@ -255,7 +255,7 @@ class DirectionalLoss(nn.Module):
             direction_values = self._norm_direction_values(direction_values)
 
         loss = direction_weights * direction_values
-        loss = (loss * loss_mask).mean(1, keepdim=True)
+        loss = (loss * loss_mask).sum(1, keepdim=True)
         loss = loss.sum() / loss_mask.sum()
 
         return loss * self.loss_weight * (weight or 1.)

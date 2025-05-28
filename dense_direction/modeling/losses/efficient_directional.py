@@ -263,6 +263,7 @@ class EfficientDirectionalLoss(nn.Module):
         direction_weights = torch.sin(shifted_direction_bins * self.pi)
 
         loss = direction_weights * direction_values
+        loss = loss.sum(-1)
         loss = loss.mean() * self.loss_weight * (weight or 1.)
 
         return loss
