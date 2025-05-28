@@ -118,38 +118,38 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         assert self.num_fusion_blocks == self.num_reassemble_blocks
         assert self.num_reassemble_blocks == self.num_post_process_channels
 
-    def layers(self, inputs: Sequence[Tensor]) -> Tensor:
+    def layers(self, inputs: list[Tensor]) -> Tensor:
         """
         Forward pass through the DPT deocde head layers.
 
         This method transforms inputs and passes them through head's layers.
 
         Args:
-            inputs (Sequence[Tensor]): List of input tensors.
+            inputs (list[Tensor]): List of input tensors.
 
         Returns:
             features (Tensor): Output tensors of shape (N, C, H, W).
         """
         assert len(inputs) == self.num_reassemble_blocks
-        x = self._transform_inputs(inputs)
-        x = self.reassemble_blocks(x)
-        x = [self.convs[i](feature) for i, feature in enumerate(x)]
-        out = self.fusion_blocks[0](x[-1])
+        feature_list: list[Tensor] = self._transform_inputs(inputs)
+        feature_list = self.reassemble_blocks(feature_list)
+        feature_list = [self.convs[i](feature) for i, feature in enumerate(feature_list)]
+        features: Tensor = self.fusion_blocks[0](feature_list[-1])
         for i in range(1, len(self.fusion_blocks)):
-            out = self.fusion_blocks[i](out, x[-(i + 1)])
-        out = self.project(out)
-        return out
+            features = self.fusion_blocks[i](features, feature_list[-(i + 1)])
+        features = self.project(features)
+        return features
 
-    def forward(self, inputs: Sequence[Tensor]) -> Tensor:
+    def forward(self, inputs: list[Tensor]) -> Tensor:
         """
         Forward pass through the decode head.
 
         Args:
-            inputs (Sequence[Tensor]): Input tensors of shape (N, C, H, W).
+            inputs (list[Tensor]): Input tensors of shape (N, C, H, W).
 
         Returns:
             outputs (Tensor): Output direction vector field for each class (N, K, 2, H, W).
         """
-        out = self.layers(inputs)
-        out = self.estimate_directions(out)
-        return out
+        features: Tensor = self.layers(inputs)
+        outputs: Tensor = self.estimate_directions(features)
+        return outputs

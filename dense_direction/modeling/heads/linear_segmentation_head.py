@@ -51,7 +51,7 @@ class LinearHead(BaseDecodeHead):
         Returns:
             features (Tensor): Output tensors of shape (N, C, H, W).
         """
-        features = self._transform_inputs(inputs)
+        features: Tensor = self._transform_inputs(inputs)
         if self.with_norm:
             features = self.norm(features)
 
@@ -67,7 +67,7 @@ class LinearHead(BaseDecodeHead):
         Returns:
             outputs (Tensor): Output tensor with clas logits.
         """
-        features = self.layers(inputs)
-        outputs = self.cls_seg(features)
+        features: Tensor = self.layers(inputs)
+        outputs: Tensor = self.cls_seg(features)
 
         return outputs

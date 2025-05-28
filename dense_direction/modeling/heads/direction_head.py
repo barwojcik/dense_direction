@@ -189,22 +189,22 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         """
         super().__init__(init_cfg or self.DEFAULT_INIT_CFG)
         self._init_inputs(in_channels, in_index, input_transform)
-        self.channels = channels
-        self.dir_classes = dir_classes or (1,)
-        self.num_classes = len(self.dir_classes)
-        self.dropout_ratio = dropout_ratio
-        self.conv_cfg = conv_cfg
-        self.norm_cfg = norm_cfg
-        self.act_cfg = act_cfg or self.DEFAULT_ACT_CFG
-        self.in_index = in_index
-        self.ignore_index = ignore_index
-        self.align_corners = align_corners
-        self.pre_norm_vectors = pre_norm_vectors
-        self.post_norm_vectors = post_norm_vectors
-        self.gt_scale_factor = gt_scale_factor
+        self.channels: int = channels
+        self.dir_classes: Sequence[int] = dir_classes or (1,)
+        self.num_classes: int = len(self.dir_classes)
+        self.dropout_ratio: float = dropout_ratio
+        self.conv_cfg: ConfigType = conv_cfg
+        self.norm_cfg: ConfigType = norm_cfg
+        self.act_cfg: ConfigType = act_cfg or self.DEFAULT_ACT_CFG
+        self.in_index: int | Sequence[int] = in_index
+        self.ignore_index: int = ignore_index
+        self.align_corners: bool = align_corners
+        self.pre_norm_vectors: bool = pre_norm_vectors
+        self.post_norm_vectors: bool = post_norm_vectors
+        self.gt_scale_factor: float = gt_scale_factor
 
         # 2 vector components per class
-        self.out_channels = 2 * self.num_classes
+        self.out_channels: int = 2 * self.num_classes
 
         loss_decode = loss_decode or self.DEFAULT_LOSS
         if isinstance(loss_decode, dict):
@@ -257,7 +257,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
 
         if input_transform is not None:
             assert input_transform in ["resize_concat", "multiple_select"]
-        self.input_transform = input_transform
+        self.input_transform: str = input_transform
         self.in_index = in_index
         if input_transform is not None:
             assert isinstance(in_channels, (list, tuple))
@@ -272,7 +272,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             assert isinstance(in_index, int)
             self.in_channels = in_channels
 
-    def _transform_inputs(self, inputs):
+    def _transform_inputs(self, inputs: list[Tensor]) -> Tensor | list[Tensor]:
         """
         Transforms inputs for decoder.
 
@@ -280,12 +280,12 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             inputs (list[Tensor]): List of multi-level img features.
 
         Returns:
-            Tensor: The transformed inputs
+            Tensor | list[Tensor]: The transformed inputs
         """
 
         if self.input_transform == "resize_concat":
-            inputs = [inputs[i] for i in self.in_index]
-            upsampled_inputs = [
+            inputs: list[Tensor] = [inputs[i] for i in self.in_index]
+            upsampled_inputs: list[Tensor] = [
                 resize(
                     input=x,
                     size=inputs[0].shape[2:],
@@ -294,11 +294,11 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
                 )
                 for x in inputs
             ]
-            inputs = torch.cat(upsampled_inputs, dim=1)
+            inputs: Tensor = torch.cat(upsampled_inputs, dim=1)
         elif self.input_transform == "multiple_select":
-            inputs = [inputs[i] for i in self.in_index]
+            inputs: list[Tensor] = [inputs[i] for i in self.in_index]
         else:
-            inputs = inputs[self.in_index]
+            inputs: Tensor = inputs[self.in_index]
 
         return inputs
 
@@ -312,7 +312,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         if self.dropout is not None:
             feat = self.dropout(feat)
 
-        output = self.conv_dir(feat)
+        output: Tensor = self.conv_dir(feat)
         n, c, h, w = output.shape
         output = output.reshape(n, self.num_classes, 2, h, w)
 
@@ -335,8 +335,8 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-        dir_vectors = self.forward(inputs)
-        losses = self.loss_by_feat(dir_vectors, batch_data_samples)
+        dir_vectors: Tensor = self.forward(inputs)
+        losses: dict = self.loss_by_feat(dir_vectors, batch_data_samples)
         return losses
 
     def predict(
@@ -356,7 +356,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         Returns:
             Tensor: Outputs direction vector field for each class.
         """
-        dir_vectors = self.forward(inputs)
+        dir_vectors: Tensor = self.forward(inputs)
 
         return self.predict_by_feat(dir_vectors, batch_img_metas)
 
@@ -372,9 +372,9 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             Tensor: Semantic segmentation map of shape (N, K, 1, H, W) where K number of linear
                 classes.
         """
-        class_maps = []
+        class_maps: list[Tensor] = []
         for class_index in self.dir_classes:
-            class_map = torch.where(gt_sem_seg == class_index, 1, 0)
+            class_map: Tensor = torch.where(gt_sem_seg == class_index, 1, 0)
             class_maps.append(class_map)
         return torch.stack(class_maps, dim=1).float()
 
@@ -425,8 +425,8 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             dict[str, Tensor]: a dictionary of loss components
         """
 
-        seg_label = self._stack_batch_gt(batch_data_samples)
-        loss = dict()
+        seg_label: Tensor = self._stack_batch_gt(batch_data_samples)
+        loss: dict = dict()
         n, k, c, h1, w1 = dir_vectors.shape
         h2, w2 = seg_label.shape[-2:]
         dir_vectors = resize(

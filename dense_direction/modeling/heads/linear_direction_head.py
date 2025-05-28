@@ -52,7 +52,7 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
         Returns:
             features (Tensor): Output tensors of shape (N, C, H, W).
         """
-        features = self._transform_inputs(inputs)
+        features: Tensor = self._transform_inputs(inputs)
         if self.with_norm:
             features = self.norm(features)
 
@@ -68,7 +68,7 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
         Returns:
             outputs (Tensor): Output direction vector field for each class (N, K, 2, H, W).
         """
-        features = self.layers(inputs)
-        outputs = self.estimate_directions(features)
+        features: Tensor = self.layers(inputs)
+        outputs: Tensor = self.estimate_directions(features)
 
         return outputs
