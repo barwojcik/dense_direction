@@ -96,11 +96,11 @@ class SmoothnessLoss(nn.Module):
         neighborhood_vectors = neighborhood_vectors.reshape(n * k, 2, h, w) - masked_vector_field
 
         loss = F.cosine_similarity(masked_vector_field, neighborhood_vectors, dim=1)
-        loss = (0.5 * (1 - loss))**self.alpha
+        loss = (0.5 * (1 - loss)) ** self.alpha
         loss = loss.unsqueeze(1) * loss_mask
         loss = loss.sum() / loss_mask.sum()
 
-        return loss * self.loss_weight * (weight or 1.)
+        return loss * self.loss_weight * (weight or 1.0)
 
     @property
     def loss_name(self):

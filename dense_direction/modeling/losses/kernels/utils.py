@@ -29,11 +29,11 @@ def get_polar_coordinates(k_size: int) -> np.ndarray:
         np.ndarray: 2D array filled with polar coordinates.
     """
     center = (k_size - 1) / 2
-    cords = np.fromfunction(lambda x, y: np.arctan2(x-center, y-center), (k_size, k_size))
+    cords = np.fromfunction(lambda x, y: np.arctan2(x - center, y - center), (k_size, k_size))
     return cords
 
 
-def get_disc_mask(k_size: int, radius:int=None) -> np.ndarray:
+def get_disc_mask(k_size: int, radius: int = None) -> np.ndarray:
     """
     Returns 2D disc mask of given radius.
 
@@ -42,8 +42,8 @@ def get_disc_mask(k_size: int, radius:int=None) -> np.ndarray:
     Returns:
         np.ndarray: 2D disc mask of given radius.
     """
-    radius = radius or (k_size-1)/2
-    assert radius <= (k_size-1)/2
+    radius = radius or (k_size - 1) / 2
+    assert radius <= (k_size - 1) / 2
 
     cords = get_coordinates(k_size)
     distances = np.sqrt((cords**2).sum(0))

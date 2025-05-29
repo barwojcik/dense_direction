@@ -130,8 +130,9 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         Returns:
             features (Tensor): Output tensors of shape (N, C, H, W).
         """
-        assert len(inputs) == self.num_reassemble_blocks
+
         feature_list: list[Tensor] = self._transform_inputs(inputs)
+        assert len(feature_list) == self.num_reassemble_blocks
         feature_list = self.reassemble_blocks(feature_list)
         feature_list = [self.convs[i](feature) for i, feature in enumerate(feature_list)]
         features: Tensor = self.fusion_blocks[0](feature_list[-1])
@@ -150,6 +151,7 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         Returns:
             outputs (Tensor): Output direction vector field for each class (N, K, 2, H, W).
         """
+
         features: Tensor = self.layers(inputs)
         outputs: Tensor = self.estimate_directions(features)
         return outputs

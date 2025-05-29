@@ -264,7 +264,7 @@ class EfficientDirectionalLoss(nn.Module):
 
         loss = direction_weights * direction_values
         loss = loss.sum(-1)
-        loss = loss.mean() * self.loss_weight * (weight or 1.)
+        loss = loss.mean() * self.loss_weight * (weight or 1.0)
 
         return loss
 

@@ -258,7 +258,7 @@ class DirectionalLoss(nn.Module):
         loss = (loss * loss_mask).sum(1, keepdim=True)
         loss = loss.sum() / loss_mask.sum()
 
-        return loss * self.loss_weight * (weight or 1.)
+        return loss * self.loss_weight * (weight or 1.0)
 
     @property
     def loss_name(self):

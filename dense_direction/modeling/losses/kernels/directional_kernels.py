@@ -20,7 +20,7 @@ __all__ = [
 def circular_point_kernels(
     pad: int = 2,
     div: int = 20,
-    threshold:float = 1,
+    threshold: float = 1,
     **kwargs,
 ) -> Tensor:
     """
@@ -38,9 +38,9 @@ def circular_point_kernels(
         Tensor: Tensor of shape (div, k_size, k_size).
     """
     assert threshold >= 1, "Distance threshold must be >= 1."
-    k_size = 2*pad+1
+    k_size = 2 * pad + 1
 
-    def compute_kernels(cords: np.ndarray, points: np.ndarray, threshold:float) -> np.ndarray:
+    def compute_kernels(cords: np.ndarray, points: np.ndarray, threshold: float) -> np.ndarray:
         kernels = cords - points[:, :, np.newaxis, np.newaxis]
         kernels = threshold - np.sqrt((kernels**2).sum(0))
         kernels = np.where(kernels > 0, kernels, 0)
@@ -65,7 +65,7 @@ def circular_point_kernels(
 def radial_line_kernels(
     pad: int = 2,
     div: int = 20,
-    threshold:float = 1,
+    threshold: float = 1,
     **kwargs,
 ) -> Tensor:
     """
