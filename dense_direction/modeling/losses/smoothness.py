@@ -24,6 +24,8 @@ class SmoothnessLoss(nn.Module):
                 2 * pad + 1, default: 3.
         mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
         alpha (float, optional): The exponent parameter for smoothness loss. Default: 2.0.
+        reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'.
+            Default: 'mean'.
         loss_weight (float, optional): Loss weight. Default: 1.0.
         loss_name (str, optional): Name of the loss. Default: "loss_dir".
     """
@@ -33,6 +35,7 @@ class SmoothnessLoss(nn.Module):
         pad: int = 1,
         mask_thr: float = 0.5,
         alpha: float = 2.0,
+        reduction: str = "mean",
         loss_weight: float = 1.0,
         loss_name="loss_smth",
         **kwargs,
@@ -45,6 +48,8 @@ class SmoothnessLoss(nn.Module):
                 2 * pad + 1, default: 3.
             mask_thr (float, optional): Threshold for sematic segmentation maps. Default: 0.5.
             alpha (float, optional): The exponent parameter for smoothness loss. Default: 2.0.
+            reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'.
+                Default: 'mean'.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
@@ -54,6 +59,7 @@ class SmoothnessLoss(nn.Module):
         self.k_size = 2 * pad + 1
         self.mask_thr: float = mask_thr
         self.alpha: float = alpha
+        self.reduction: str = reduction.lower()
         self.loss_weight: float = loss_weight
         self._loss_name: str = loss_name
 
@@ -98,9 +104,15 @@ class SmoothnessLoss(nn.Module):
         loss = F.cosine_similarity(masked_vector_field, neighborhood_vectors, dim=1)
         loss = (0.5 * (1 - loss)) ** self.alpha
         loss = loss.unsqueeze(1) * loss_mask
-        loss = loss.sum() / loss_mask.sum()
+        loss = loss * self.loss_weight * (weight or 1.0)
 
-        return loss * self.loss_weight * (weight or 1.0)
+        if self.reduction == "mean":
+            return loss.sum() / loss_mask.sum()
+
+        if self.reduction == "sum":
+            return loss.sum()
+
+        return loss
 
     @property
     def loss_name(self):

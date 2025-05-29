@@ -37,6 +37,8 @@ class EfficientDirectionalLoss(nn.Module):
         patch_thr (float, optional): Threshold for patch masking. Default: 0.8.
         kernel_cfg (ConfigType, optional): Kernel configuration.
             Default: 'dict(type="circular_point_kernels")'.
+        reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'.
+            Default: 'mean'.
         loss_weight (float, optional): Loss weight. Default: 1.0.
         loss_name (str, optional): Name of the loss. Default: "loss_dir".
     """
@@ -54,6 +56,7 @@ class EfficientDirectionalLoss(nn.Module):
         mask_patches: bool = False,
         patch_thr: float = 0.8,
         kernel_cfg: ConfigType = None,
+        reduction: str = "mean",
         loss_weight: float = 1.0,
         loss_name: str = "loss_dir",
         **kwargs,
@@ -73,6 +76,8 @@ class EfficientDirectionalLoss(nn.Module):
             patch_thr (float, optional): Threshold for patch masking. Default: 0.8.
             kernel_cfg (ConfigType, optional): Kernel configuration.
                 Default: 'dict(type="circular_point_kernels")'.
+            reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'. 
+                Default: 'mean'.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
@@ -89,6 +94,7 @@ class EfficientDirectionalLoss(nn.Module):
         kernel_cfg: ConfigType = kernel_cfg or self.DEFAULT_KERNEL_CFG
         self.kernel_fn: Callable = FUNCTIONS.get(kernel_cfg.pop("type"))
         self.kernel_cfg: ConfigType = kernel_cfg
+        self.reduction: str = reduction.lower()
         self.loss_weight: float = loss_weight
         self._loss_name: str = loss_name
 
@@ -263,8 +269,13 @@ class EfficientDirectionalLoss(nn.Module):
         direction_weights = torch.sin(shifted_direction_bins * self.pi)
 
         loss = direction_weights * direction_values
-        loss = loss.sum(-1)
-        loss = loss.mean() * self.loss_weight * (weight or 1.0)
+        loss = loss.sum(-1) * self.loss_weight * (weight or 1.0)
+
+        if self.reduction == "mean":
+            return  loss.mean()
+
+        if self.reduction == "sum":
+            return loss.sum()
 
         return loss
 
