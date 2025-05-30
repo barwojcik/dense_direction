@@ -96,24 +96,26 @@ class DumpSamples(BaseMetric):
 
         for data_sample in data_samples:
             output_path = self.output_directory + f"/{str(len(self.results)+1)}.pkl"
+
             if self.fields is not None:
                 data_sample = {k:v for k, v in data_sample.items() if k in self.fields}
 
+                if not len(data_sample) == len(self.fields):
+                    print_log(
+                        "Missing fields in data sample: "
+                        f"{[field for field in self.fields if field not in data_sample.keys()]}",
+                        logger="current",
+                        level=logging.WARNING,
+                    )
+
             if not data_sample:
                 print_log(
-                    "No data to save, got an empty data sample in DumpSamples. Check configuration.",
+                    "No data to save, got an empty data sample in DumpSamples. "
+                    "Check configuration.",
                     logger="current",
                     level=logging.WARNING,
                 )
                 continue
-
-            if not len(data_sample)==len(self.fields):
-                print_log(
-                    "Missing fields in data sample: "
-                    f"{[field for field in self.fields if field not in data_sample.keys()]}",
-                    logger="current",
-                    level=logging.WARNING,
-                )
 
             dump(_to_cpu(data_sample), output_path)
             self.results.append(output_path)
