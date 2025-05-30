@@ -100,7 +100,7 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
         """
 
         feature_list: list[Tensor] = self._transform_inputs(inputs)
-        features = self.dpt_block(feature_list)
+        features = self.dpt_block(feature_list)[0]
         return features
 
     def forward(self, inputs: list[Tensor]) -> Tensor:

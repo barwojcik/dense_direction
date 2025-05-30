@@ -8,6 +8,7 @@ as a backbone.
 from typing import Sequence
 
 import torch
+from torch import Tensor
 import torch.nn as nn
 
 from mmengine.model import BaseModule
@@ -111,7 +112,7 @@ class Dino2TorchHub(BaseModule):
         if self.frozen:
             self.layers.requires_grad_(False)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> list[Tensor]:
         """
         Forward pass through the model.
 
@@ -119,7 +120,7 @@ class Dino2TorchHub(BaseModule):
             x (Tensor): Input tensor to be processed by the model.
 
         Returns:
-            Tensor: Output tensor after processing by the model.
+            list[Tensor]: Output tensors after processing by the model.
         """
 
         if self.return_intermediate_layers:
@@ -130,7 +131,8 @@ class Dino2TorchHub(BaseModule):
                 return_class_token=self.return_class_token,
                 norm=self.norm_output,
             )
+            x = list(x)
         else:
-            x = self.layers(x)
+            x = [self.layers(x)]
 
         return x

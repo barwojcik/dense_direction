@@ -117,7 +117,7 @@ class DPTDecoderBlock(BaseModule):
         assert self.num_fusion_blocks == self.num_reassemble_blocks
         assert self.num_reassemble_blocks == self.num_post_process_channels
 
-    def forward(self, feature_list: list[Tensor]) -> Tensor:
+    def forward(self, feature_list: list[Tensor]) -> list[Tensor]:
         """
         Forward pass through the dpt decoder block.
 
@@ -125,7 +125,8 @@ class DPTDecoderBlock(BaseModule):
             feature_list (list[Tensor]): List of input tensors of shape (N, in_C, in_H, in_W).
 
         Returns:
-            features (Tensor): Output features of shape (N, out_C, out_H, out_W).
+            features (list[Tensor]): Output features of shape (N, out_C, out_H, out_W) as one
+                element list.
         """
 
         assert len(feature_list) == self.num_reassemble_blocks
@@ -140,4 +141,4 @@ class DPTDecoderBlock(BaseModule):
 
         features = self.project(features)
 
-        return features
+        return [features]
