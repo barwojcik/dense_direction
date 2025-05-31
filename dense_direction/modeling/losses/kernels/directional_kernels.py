@@ -11,23 +11,23 @@ from mmengine import FUNCTIONS
 from .utils import get_coordinates
 
 __all__ = [
-    "circular_point_kernels",
-    "radial_line_kernels",
+    "circular_point_kernel",
+    "radial_line_kernel",
 ]
 
 
 @FUNCTIONS.register_module()
-def circular_point_kernels(
+def circular_point_kernel(
     pad: int = 2,
     div: int = 20,
     threshold: float = 1,
     **kwargs,
 ) -> Tensor:
     """
-    Computes the circular point kernels.
+    Computes the circular point kernel.
 
     Returns a tensor that contains the circular kernels for directional loss computation.
-    Each kernel represents 2 points located on opposite sides of the circle (diameter = k_size).
+    Each channel represents 2 points located on opposite sides of the circle (diameter = k_size).
 
     Args:
         pad (int): Padding value for a kernel. Default: 2.
@@ -40,13 +40,13 @@ def circular_point_kernels(
     assert threshold >= 1, "Distance threshold must be >= 1."
     k_size = 2 * pad + 1
 
-    def compute_kernels(cords: np.ndarray, points: np.ndarray, threshold: float) -> np.ndarray:
-        kernels = cords - points[:, :, np.newaxis, np.newaxis]
-        kernels = threshold - np.sqrt((kernels**2).sum(0))
-        kernels = np.where(kernels > 0, kernels, 0)
-        kernels = kernels / kernels.sum(axis=(1, 2), keepdims=True)
+    def compute_kernel(cords: np.ndarray, points: np.ndarray, threshold: float) -> np.ndarray:
+        kernel = cords - points[:, :, np.newaxis, np.newaxis]
+        kernel = threshold - np.sqrt((kernel**2).sum(0))
+        kernel = np.where(kernel > 0, kernel, 0)
+        kernel = kernel / kernel.sum(axis=(1, 2), keepdims=True)
 
-        return kernels
+        return kernel
 
     cords = get_coordinates(k_size)
     cords = np.stack(div * [cords], axis=1)
@@ -54,25 +54,25 @@ def circular_point_kernels(
     angles = np.linspace(0, np.pi, div, False)
     half_points = np.stack([np.sin(angles), np.cos(angles)]) * (k_size - 1) / 2
 
-    kernels = compute_kernels(cords, half_points, threshold)
-    kernels += compute_kernels(cords, -half_points, threshold)
-    kernels = kernels[..., ::-1]
+    kernel = compute_kernel(cords, half_points, threshold)
+    kernel += compute_kernel(cords, -half_points, threshold)
+    kernel = kernel[..., ::-1]
 
-    return torch.as_tensor(kernels / 2)
+    return torch.as_tensor(kernel / 2)
 
 
 @FUNCTIONS.register_module()
-def radial_line_kernels(
+def radial_line_kernel(
     pad: int = 2,
     div: int = 20,
     threshold: float = 1,
     **kwargs,
 ) -> Tensor:
     """
-    This functions computes the radial line kernels.
+    This functions computes the radial line kernel.
 
-    Returns a tensor that contains the radial line kernels for directional loss computation.
-    Each kernel represents the diameter of circle.
+    Returns a tensor that contains the radial line kernel for directional loss computation.
+    Each channel represents a line that is a diameter of circle.
 
     Args:
         pad (int): Padding value for a kernel. Default: 2.
@@ -95,12 +95,12 @@ def radial_line_kernels(
     lines_params = np.stack([np.tan(angles), -np.ones_like(angles)])
     lines_params = lines_params[:, :, np.newaxis, np.newaxis]
 
-    kernels = threshold - np.abs((cords * lines_params).sum(0)) / np.sqrt((lines_params**2).sum(0))
-    kernels = np.where(kernels > 0, kernels, 0)
-    kernels = np.where(center_distances > pad, 0, kernels)
-    kernels = kernels * dists_weights
-    kernels = kernels.transpose(0, 2, 1)
-    kernels = kernels[:, :, ::-1]
-    kernels = kernels / kernels.sum(axis=(-1, -2), keepdims=True)
+    kernel = threshold - np.abs((cords * lines_params).sum(0)) / np.sqrt((lines_params**2).sum(0))
+    kernel = np.where(kernel > 0, kernel, 0)
+    kernel = np.where(center_distances > pad, 0, kernel)
+    kernel = kernel * dists_weights
+    kernel = kernel.transpose(0, 2, 1)
+    kernel = kernel[:, :, ::-1]
+    kernel = kernel / kernel.sum(axis=(-1, -2), keepdims=True)
 
-    return torch.as_tensor(kernels)
+    return torch.as_tensor(kernel)
