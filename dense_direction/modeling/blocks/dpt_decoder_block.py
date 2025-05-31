@@ -43,6 +43,7 @@ class DPTDecoderBlock(BaseModule):
             Default dict(type='ReLU').
         norm_cfg (dict): Config dict for normalization layer. Default: dict(type='BN').
         init_cfg (dict): Config dict for initializing DPT layers. Default: None.
+        return_list (bool): Whether to return a tensor packed in a list or just a tensor. Default: False.
     """
 
     DEFAULT_PP_CHANNELS = [96, 192, 384, 768]
@@ -60,6 +61,7 @@ class DPTDecoderBlock(BaseModule):
         act_cfg: ConfigType = None,
         norm_cfg: ConfigType = None,
         init_cfg: ConfigType = None,
+        return_list: bool = False,
     ) -> None:
         """
         Initialize the DPTBlock class.
@@ -82,6 +84,8 @@ class DPTDecoderBlock(BaseModule):
             act_cfg (dict): The activation config for residual conv unit. Default dict(type='ReLU').
             norm_cfg (dict): Config dict for normalization layer. Default: dict(type='BN').
             init_cfg (dict): Config dict for initializing DPT layers. Default: None.
+            return_list (bool): Whether to return a tensor packed in a list or just a tensor.
+                Default: False.
         """
         super().__init__(init_cfg)
         post_process_channels = post_process_channels or self.DEFAULT_PP_CHANNELS
@@ -117,13 +121,14 @@ class DPTDecoderBlock(BaseModule):
         assert self.num_fusion_blocks == self.num_reassemble_blocks
         assert self.num_reassemble_blocks == self.num_post_process_channels
 
-    def forward(self, feature_list: list[Tensor], return_list: bool=True) -> Tensor | list[Tensor]:
+        self.return_list = return_list
+
+    def forward(self, feature_list: list[Tensor]) -> Tensor | list[Tensor]:
         """
         Forward pass through the dpt decoder block.
 
         Args:
             feature_list (list[Tensor]): List of input tensors of shape (N, in_C, in_H, in_W).
-            return_list (bool): Whether to return a tensor packed in a list or just a tensor.
 
         Returns:
             features (Tensor | list[Tensor]): Output features of shape (N, out_C, out_H, out_W) as
@@ -142,6 +147,6 @@ class DPTDecoderBlock(BaseModule):
 
         features = self.project(features)
 
-        if return_list:
+        if self.return_list:
             return [features, ]
         return features
