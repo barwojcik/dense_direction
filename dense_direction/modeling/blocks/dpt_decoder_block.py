@@ -117,16 +117,17 @@ class DPTDecoderBlock(BaseModule):
         assert self.num_fusion_blocks == self.num_reassemble_blocks
         assert self.num_reassemble_blocks == self.num_post_process_channels
 
-    def forward(self, feature_list: list[Tensor]) -> list[Tensor]:
+    def forward(self, feature_list: list[Tensor], return_list: bool=True) -> Tensor | list[Tensor]:
         """
         Forward pass through the dpt decoder block.
 
         Args:
             feature_list (list[Tensor]): List of input tensors of shape (N, in_C, in_H, in_W).
+            return_list (bool): Whether to return a tensor packed in a list or just a tensor.
 
         Returns:
-            features (list[Tensor]): Output features of shape (N, out_C, out_H, out_W) as one
-                element list.
+            features (Tensor | list[Tensor]): Output features of shape (N, out_C, out_H, out_W) as
+                a tensor or a tensor packed in a list.
         """
 
         assert len(feature_list) == self.num_reassemble_blocks
@@ -141,4 +142,6 @@ class DPTDecoderBlock(BaseModule):
 
         features = self.project(features)
 
-        return [features]
+        if return_list:
+            return [features, ]
+        return features
