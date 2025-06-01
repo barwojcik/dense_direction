@@ -8,21 +8,13 @@ import numpy as np
 import torch
 from torch import Tensor
 from mmengine import FUNCTIONS
+
 from .utils import (
     get_kernel_size,
     get_stacked_coordinates,
     get_disc_mask,
     get_points_on_semicircle,
 )
-
-__all__ = [
-    "circular_point_kernel",
-    "radial_line_kernel",
-    "polar_kernel",
-    "polar_disc_kernel",
-    "polar_wedge_kernel",
-    "polar_sector_kernel",
-]
 
 
 @FUNCTIONS.register_module()
