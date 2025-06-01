@@ -16,7 +16,7 @@ def get_kernel_size(pad: int) -> int:
         int: The kernel size.
     """
 
-    return 2 * pad - 1
+    return 2 * pad + 1
 
 
 def get_coordinates(size: int) -> np.ndarray:

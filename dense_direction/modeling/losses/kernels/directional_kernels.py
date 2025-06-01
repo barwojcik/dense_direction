@@ -146,10 +146,10 @@ def polar_kernel(
     points: np.ndarray = get_points_on_semicircle(div)
 
     kernel: np.ndarray = np.arccos(np.einsum("ijkl,ij->jkl", stacked_cords, points))
-    kernel = np.nan_to_num(kernel)
     kernel = np.where(kernel > .5*np.pi, np.pi-kernel, kernel)
     kernel /= .5*np.pi
     kernel = (1 - kernel)**alpha
+    kernel = np.nan_to_num(kernel)
     kernel = kernel[:, :, ::-1]
     kernel = kernel / kernel.sum(axis=(-1, -2), keepdims=True)
 
@@ -193,12 +193,12 @@ def polar_wedge_kernel(
     points: np.ndarray = get_points_on_semicircle(div)
 
     kernel: np.ndarray = np.arccos(np.einsum("ijkl,ij->jkl", stacked_cords, points))
-    kernel = np.nan_to_num(kernel)
     kernel = np.where(kernel > .5*np.pi, np.pi-kernel, kernel)
     kernel = threshold - kernel
     kernel = np.where(kernel < 0, 0, kernel)
     kernel /= threshold
     kernel = kernel**alpha
+    kernel = np.nan_to_num(kernel)
     kernel = kernel[:, :, ::-1]
     kernel = kernel / kernel.sum(axis=(-1, -2), keepdims=True)
 
