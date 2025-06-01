@@ -75,6 +75,7 @@ def radial_line_kernel(
     pad: int = 2,
     div: int = 20,
     threshold: float = 1,
+    reverse_weights: bool = False,
     **kwargs,
 ) -> Tensor:
     """
@@ -87,6 +88,7 @@ def radial_line_kernel(
         pad (int): Padding value for a kernel. Default: 2.
         div (int): Division factor for direction bins. Default: 20.
         threshold (float, optional): The distance threshold from the line. Default: 1.0.
+        reverse_weights (bool, optional): Whether to reverse the distance weights. Default: False.
 
     Returns:
         Tensor: Tensor of shape (div, k_size, k_size), where k_size = 2 * pad +1.
@@ -100,6 +102,9 @@ def radial_line_kernel(
 
     center_distances: np.ndarray = np.sqrt((stacked_cords**2).sum(0))
     dists_weights: np.ndarray = (pad - center_distances) / pad
+
+    if reverse_weights:
+        dists_weights = 1 - dists_weights
 
     angles: np.ndarray = np.linspace(0, np.pi, div, False)
     lines_params: np.ndarray = np.stack([np.tan(angles), -np.ones_like(angles)])
