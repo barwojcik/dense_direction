@@ -9,5 +9,6 @@ from .blocks import *
 from .heads import *
 from .losses import *
 from .meta_arch import *
+from .necks import *
 
 __all__ = []

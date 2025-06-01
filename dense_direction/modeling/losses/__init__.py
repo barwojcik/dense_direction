@@ -1,4 +1,6 @@
-""" """
+"""
+Module containing loss classes.
+"""
 
 from .kernels import *
 from .directional import DirectionalLoss

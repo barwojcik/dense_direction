@@ -18,6 +18,10 @@ from .utils import (
 __all__ = [
     "circular_point_kernel",
     "radial_line_kernel",
+    "polar_kernel",
+    "polar_disc_kernel",
+    "polar_wedge_kernel",
+    "polar_sector_kernel",
 ]
 
 
