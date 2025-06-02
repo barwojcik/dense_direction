@@ -272,7 +272,7 @@ class EfficientDirectionalLoss(nn.Module):
         loss = loss.sum(-1) * self.loss_weight * (weight or 1.0)
 
         if self.reduction == "mean":
-            return  loss.mean()
+            return loss.mean()
 
         if self.reduction == "sum":
             return loss.sum()

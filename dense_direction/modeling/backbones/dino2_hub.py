@@ -133,6 +133,8 @@ class Dino2TorchHub(BaseModule):
             )
             x = list(x)
         else:
-            x = [self.layers(x), ]
+            x = [
+                self.layers(x),
+            ]
 
         return x

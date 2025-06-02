@@ -14,6 +14,7 @@ from mmengine.fileio import dump
 from mmengine.logging import print_log
 from mmseg.registry import METRICS
 
+
 @METRICS.register_module()
 class DumpSamples(BaseMetric):
     """
@@ -35,13 +36,13 @@ class DumpSamples(BaseMetric):
             Defaults to None.
     """
 
-    default_prefix = 'dump_samples'
+    default_prefix = "dump_samples"
 
     def __init__(
         self,
         output_directory: str,
         fields: Optional[Sequence[str]] = None,
-        collect_device: str = 'cpu',
+        collect_device: str = "cpu",
         prefix: Optional[str] = None,
         collect_dir: Optional[str] = None,
     ) -> None:
@@ -81,7 +82,7 @@ class DumpSamples(BaseMetric):
         Returns:
             Dict[str, int]: The number of saved data samples.
         """
-        return {'samples': len(results)}
+        return {"samples": len(results)}
 
     def process(self, data_batch: Any, data_samples: Sequence[dict]) -> None:
         """
@@ -98,7 +99,7 @@ class DumpSamples(BaseMetric):
             output_path = self.output_directory + f"/{str(len(self.results)+1)}.pkl"
 
             if self.fields is not None:
-                data_sample = {k:v for k, v in data_sample.items() if k in self.fields}
+                data_sample = {k: v for k, v in data_sample.items() if k in self.fields}
 
                 if not len(data_sample) == len(self.fields):
                     print_log(

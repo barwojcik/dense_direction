@@ -102,9 +102,7 @@ class DPTDecoderBlock(BaseModule):
         self.convs = nn.ModuleList()
         for channel in self.post_process_channels:
             self.convs.append(
-                ConvModule(
-                    channel, channels, kernel_size=3, padding=1, act_cfg=None, bias=False
-                )
+                ConvModule(channel, channels, kernel_size=3, padding=1, act_cfg=None, bias=False)
             )
         self.fusion_blocks = nn.ModuleList()
         act_cfg = act_cfg or self.DEFAULT_ACT_CFG
@@ -112,9 +110,7 @@ class DPTDecoderBlock(BaseModule):
         for _ in range(len(self.convs)):
             self.fusion_blocks.append(FeatureFusionBlock(channels, act_cfg, norm_cfg))
         self.fusion_blocks[0].res_conv_unit1 = None
-        self.project = ConvModule(
-            channels, channels, kernel_size=3, padding=1, norm_cfg=norm_cfg
-        )
+        self.project = ConvModule(channels, channels, kernel_size=3, padding=1, norm_cfg=norm_cfg)
         self.num_fusion_blocks = len(self.fusion_blocks)
         self.num_reassemble_blocks = len(self.reassemble_blocks.resize_layers)
         self.num_post_process_channels = len(self.post_process_channels)
@@ -148,5 +144,7 @@ class DPTDecoderBlock(BaseModule):
         features = self.project(features)
 
         if self.return_list:
-            return [features, ]
+            return [
+                features,
+            ]
         return features

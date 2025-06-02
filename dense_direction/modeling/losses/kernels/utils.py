@@ -54,6 +54,7 @@ def get_stacked_coordinates(size: int, division: int) -> np.ndarray:
     coordinates: np.ndarray = get_coordinates(size)
     return np.stack(division * [coordinates], axis=1)
 
+
 def get_polar_coordinates(size: int) -> np.ndarray:
     """
     Returns 2D array filled with polar coordinates.

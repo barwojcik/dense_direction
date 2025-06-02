@@ -102,7 +102,9 @@ def radial_line_kernel(
     lines_params: np.ndarray = np.stack([np.tan(angles), -np.ones_like(angles)])
     lines_params = lines_params[:, :, np.newaxis, np.newaxis]
 
-    kernel: np.ndarray = threshold - np.abs((stacked_cords * lines_params).sum(0)) / np.sqrt((lines_params**2).sum(0))
+    kernel: np.ndarray = threshold - np.abs((stacked_cords * lines_params).sum(0)) / np.sqrt(
+        (lines_params**2).sum(0)
+    )
     kernel = np.where(kernel > 0, kernel, 0)
     kernel = np.where(center_distances > pad, 0, kernel)
     kernel = kernel * dists_weights
@@ -138,14 +140,14 @@ def polar_kernel(
     k_size: int = get_kernel_size(pad)
 
     stacked_cords: np.ndarray = get_stacked_coordinates(k_size, div)
-    stacked_cords = stacked_cords/np.linalg.norm(stacked_cords, axis=0, keepdims=True)
+    stacked_cords = stacked_cords / np.linalg.norm(stacked_cords, axis=0, keepdims=True)
 
     points: np.ndarray = get_points_on_semicircle(div)
 
     kernel: np.ndarray = np.arccos(np.einsum("ijkl,ij->jkl", stacked_cords, points))
-    kernel = np.where(kernel > .5*np.pi, np.pi-kernel, kernel)
-    kernel /= .5*np.pi
-    kernel = (1 - kernel)**alpha
+    kernel = np.where(kernel > 0.5 * np.pi, np.pi - kernel, kernel)
+    kernel /= 0.5 * np.pi
+    kernel = (1 - kernel) ** alpha
     kernel = np.nan_to_num(kernel)
     kernel = kernel[:, :, ::-1]
     kernel = kernel / kernel.sum(axis=(-1, -2), keepdims=True)
@@ -158,7 +160,7 @@ def polar_wedge_kernel(
     pad: int = 2,
     div: int = 20,
     alpha: float = 1,
-    threshold: float = np.pi/10,
+    threshold: float = np.pi / 10,
     **kwargs,
 ) -> Tensor:
     """
@@ -179,8 +181,9 @@ def polar_wedge_kernel(
         Tensor: Tensor of shape (div, k_size, k_size), where k_size = 2 * pad +1.
     """
 
-    assert 0 < threshold <= 0.25 * np.pi, \
-        "Angular distance threshold must be in range from 0 to 0.25π."
+    assert (
+        0 < threshold <= 0.25 * np.pi
+    ), "Angular distance threshold must be in range from 0 to 0.25π."
 
     k_size: int = get_kernel_size(pad)
 
@@ -190,7 +193,7 @@ def polar_wedge_kernel(
     points: np.ndarray = get_points_on_semicircle(div)
 
     kernel: np.ndarray = np.arccos(np.einsum("ijkl,ij->jkl", stacked_cords, points))
-    kernel = np.where(kernel > .5*np.pi, np.pi-kernel, kernel)
+    kernel = np.where(kernel > 0.5 * np.pi, np.pi - kernel, kernel)
     kernel = threshold - kernel
     kernel = np.where(kernel < 0, 0, kernel)
     kernel /= threshold
@@ -207,7 +210,7 @@ def polar_disc_kernel(
     pad: int = 2,
     div: int = 20,
     alpha: float = 1,
-    radius: float=None,
+    radius: float = None,
     **kwargs,
 ) -> Tensor:
     """
@@ -241,8 +244,8 @@ def polar_sector_kernel(
     pad: int = 2,
     div: int = 20,
     alpha: float = 1,
-    threshold: float = np.pi/10,
-    radius: float=None,
+    threshold: float = np.pi / 10,
+    radius: float = None,
     **kwargs,
 ) -> Tensor:
     """
