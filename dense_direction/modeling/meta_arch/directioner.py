@@ -170,7 +170,7 @@ class Directioner(EncoderDecoder):
 
                 i_dir_vfield = resize(
                     i_dir_vfield,
-                    size=img_meta["ori_shape"],
+                    size=img_meta["img_shape"],
                     mode="bilinear",
                     align_corners=self.align_corners,
                     warning=False,
