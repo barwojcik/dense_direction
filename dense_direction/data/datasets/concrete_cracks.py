@@ -6,7 +6,7 @@ images and corresponding semantic segmentation masks of cracks in concrete surfa
 
 Dataset source:
     Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”,
-    Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
+    Mendeley Data, V1, doi: https://doi.org/10.17632/jwsn7tfbrp.1
 """
 
 import copy
@@ -25,7 +25,7 @@ class ConcreteCracksDataset(BaseSegDataset):
 
     Dataset source:
         Özgenel, Çağlar Fırat (2019), “Concrete Crack Segmentation Dataset”,
-        Mendeley Data, V1, doi: 10.17632/jwsn7tfbrp.1
+        Mendeley Data, V1, doi: https://doi.org/10.17632/jwsn7tfbrp.1
 
     Arguments:
         data_root (str): Root directory of the dataset.
