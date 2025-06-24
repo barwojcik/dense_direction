@@ -61,7 +61,7 @@ Download dataset and move `.zip` archive into the `data` directory.
 Original dataset structure is not compatible with `BaseSegDataset`, to unpack and rearrange data use the script below:
 
 ```bash
-python ../tools/datasets/ottawa_roads.py ./Ottawa-Datset.zip ./
+python ../tools/datasets/ottawa_roads.py --zip_path ./Ottawa-Dataset.zip --output_dir ./
 ```
 
 ### Dataset structure
