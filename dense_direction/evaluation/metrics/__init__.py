@@ -1,5 +1,5 @@
 """
-
+Module containing metrics classes.
 """
 
 from .directional_loss_metric import DirectionalLossMetric
