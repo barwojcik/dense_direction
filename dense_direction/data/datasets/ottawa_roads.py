@@ -58,10 +58,10 @@ class OttawaRoadsDataset(BaseSegDataset):
     )
 
     def __init__(
-            self,
-            data_root: str = "./data/Ottawa-Dataset",
-            phase: str | None = None,
-            **kwargs,
+        self,
+        data_root: str = "./data/Ottawa-Dataset",
+        phase: str | None = None,
+        **kwargs,
     ) -> None:
         """
         Initializes the OttawaRoadsDataset class.

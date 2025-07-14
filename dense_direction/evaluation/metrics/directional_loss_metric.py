@@ -47,8 +47,8 @@ class DirectionalLossMetric(BaseMetric):
         self,
         loss_config: Optional[ConfigType] = None,
         dir_classes: Sequence[int] = None,
-        size: int = 28*14,
-        step: int = 27*14,
+        size: int = 28 * 14,
+        step: int = 27 * 14,
         collect_device: str = "cpu",
         prefix: Optional[str] = None,
         collect_dir: Optional[str] = None,
@@ -111,8 +111,8 @@ class DirectionalLossMetric(BaseMetric):
         Returns:
             Dict[str, float]: The computed loss.
         """
-        loss_value = sum([r[0] for r in results])/sum([r[1] for r in results])
-        return {'loss': loss_value}
+        loss_value = sum([r[0] for r in results]) / sum([r[1] for r in results])
+        return {"loss": loss_value}
 
     def process(self, data_batch: Any, data_samples: Sequence[dict]) -> None:
         """
@@ -137,8 +137,8 @@ class DirectionalLossMetric(BaseMetric):
 
             while x < h:
                 while y < w:
-                    pred_crop = pred_vector_field[:, :, :, x:x+self.size, y:y+self.size]
-                    gt_crop = gt_sem_seg[:, :, :, x:x+self.size, y:y+self.size]
+                    pred_crop = pred_vector_field[:, :, :, x : x + self.size, y : y + self.size]
+                    gt_crop = gt_sem_seg[:, :, :, x : x + self.size, y : y + self.size]
 
                     if gt_crop.sum() > 0:
                         loss = self.loss_function(pred_crop, gt_crop)
