@@ -24,8 +24,6 @@ from mmseg.utils import (
 )
 from mmseg.models.utils import resize
 
-from .directioner import Directioner
-
 
 @MODELS.register_module()
 class SegmentoDirectioner(EncoderDecoder):
