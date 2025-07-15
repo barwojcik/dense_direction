@@ -305,7 +305,7 @@ class SegmentoDirectioner(EncoderDecoder):
         h_grids = max(h_img - h_crop + h_stride - 1, 0) // h_stride + 1
         w_grids = max(w_img - w_crop + w_stride - 1, 0) // w_stride + 1
         seg_preds = inputs.new_zeros((batch_size, out_seg_channels, h_img, w_img))
-        dir_preds = inputs.new_zeros((batch_size, out_seg_channels, h_img, w_img))
+        dir_preds = inputs.new_zeros((batch_size, out_dir_channels, h_img, w_img))
         count_mat = inputs.new_zeros((batch_size, 1, h_img, w_img))
         for h_idx in range(h_grids):
             for w_idx in range(w_grids):
