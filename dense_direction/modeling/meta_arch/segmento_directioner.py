@@ -9,6 +9,7 @@ from typing import Optional
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import Tensor
 
 from mmengine.structures import PixelData
@@ -284,18 +285,55 @@ class SegmentoDirectioner(EncoderDecoder):
         decode without padding.
 
         Args:
-            inputs (Tensor): The tensor should have a shape NxCxHxW, which contains all images in
-                the batch.
-            batch_img_metas (List[dict]): List of image metainfo where each may also contain:
-                'img_shape', 'scale_factor', 'flip', 'img_path', 'ori_shape', and 'pad_shape'.
+            inputs (tensor): the tensor should have a shape NxCxHxW,
+                which contains all images in the batch.
+            batch_img_metas (List[dict]): List of image metainfo where each may
+                also contain: 'img_shape', 'scale_factor', 'flip', 'img_path',
+                'ori_shape', and 'pad_shape'.
                 For details on the values of these keys see
                 `mmseg/datasets/pipelines/formatting.py:PackSegInputs`.
 
         Returns:
-            tuple[Tensor, Tensor]: The tuple containing results, seg_logits and dir_vector_field,
-                of each input image.
+            tuple[Tensor, Tensor]: The segmentation and direction results for each input image.
         """
-        raise NotImplementedError
+
+        h_stride, w_stride = self.test_cfg.stride
+        h_crop, w_crop = self.test_cfg.crop_size
+        batch_size, _, h_img, w_img = inputs.size()
+        out_seg_channels = self.out_channels
+        out_dir_channels = self.out_dir_channels
+        h_grids = max(h_img - h_crop + h_stride - 1, 0) // h_stride + 1
+        w_grids = max(w_img - w_crop + w_stride - 1, 0) // w_stride + 1
+        seg_preds = inputs.new_zeros((batch_size, out_seg_channels, h_img, w_img))
+        dir_preds = inputs.new_zeros((batch_size, out_seg_channels, h_img, w_img))
+        count_mat = inputs.new_zeros((batch_size, 1, h_img, w_img))
+        for h_idx in range(h_grids):
+            for w_idx in range(w_grids):
+                y1 = h_idx * h_stride
+                x1 = w_idx * w_stride
+                y2 = min(y1 + h_crop, h_img)
+                x2 = min(x1 + w_crop, w_img)
+                y1 = max(y2 - h_crop, 0)
+                x1 = max(x2 - w_crop, 0)
+                crop_img = inputs[:, :, y1:y2, x1:x2]
+                # change the image shape to patch shape
+                batch_img_metas[0]['img_shape'] = crop_img.shape[2:]
+                # the output of encode_decode is seg logits tensor map
+                # with shape [N, C, H, W]
+                crop_seg_logit, crop_dir_vectors = self.encode_decode(crop_img, batch_img_metas)
+                seg_preds += F.pad(crop_seg_logit,
+                               (int(x1), int(seg_preds.shape[3] - x2), int(y1),
+                                int(seg_preds.shape[2] - y2)))
+                dir_preds += F.pad(crop_dir_vectors,
+                                   (int(x1), int(dir_preds.shape[3] - x2), int(y1),
+                                    int(dir_preds.shape[2] - y2)))
+
+                count_mat[:, :, y1:y2, x1:x2] += 1
+        assert (count_mat == 0).sum() == 0
+        seg_logits = seg_preds / count_mat
+        dir_vector_field = dir_preds / count_mat
+
+        return seg_logits, dir_vector_field
 
     def aug_test(
         self, inputs: Tensor, batch_img_metas: list[dict], rescale=True
