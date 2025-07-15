@@ -50,8 +50,8 @@ class DualDecodeHead(nn.Module):
         Returns:
             outputs (tuple[Tensor, Tensor]): Output tensors for respective heads.
         """
-        seg_logits = self.seg_head.forward(inputs)
-        dir_vector_field = self.dir_head.forward(inputs)
+        seg_logits: Tensor = self.seg_head.forward(inputs)
+        dir_vector_field: Tensor = self.dir_head.forward(inputs)
 
         return seg_logits, dir_vector_field
 
@@ -98,7 +98,7 @@ class DualDecodeHead(nn.Module):
         Returns:
             tuple[Tensor, Tensor]: Output tensors for respective heads.
         """
-        seg_logits = self.seg_head.predict(inputs, batch_img_metas, test_cfg)
-        dir_vector_field = self.dir_head.predict(inputs, batch_img_metas, test_cfg)
+        seg_logits: Tensor = self.seg_head.predict(inputs, batch_img_metas, test_cfg)
+        dir_vector_field: Tensor = self.dir_head.predict(inputs, batch_img_metas, test_cfg)
 
         return seg_logits, dir_vector_field
