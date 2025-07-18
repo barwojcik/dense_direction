@@ -38,6 +38,7 @@ class DualDecodeHead(nn.Module):
         self.align_corners = self.seg_head.align_corners
         self.num_classes = self.seg_head.num_classes
         self.out_channels = self.seg_head.out_channels
+        self.threshold = self.seg_head.threshold
         self.dir_classes = self.dir_head.dir_classes
 
     def forward(self, inputs: Sequence[Tensor]) -> tuple[Tensor, Tensor]:
