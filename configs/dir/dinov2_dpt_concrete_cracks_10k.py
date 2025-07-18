@@ -1,5 +1,5 @@
 _base_ = [
-    "./base_config.py",
+    "../base_config.py",
 ]
 work_dir = "./outputs/dir/cracks"
 train_iters = 10_000
