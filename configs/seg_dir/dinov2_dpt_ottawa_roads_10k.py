@@ -45,7 +45,7 @@ train_dataloader = dict(
             dict(type="BinarizeAnnotations"),
             dict(
                 type="MaskGuidedRandomCrop",
-                crop_size=(28 * 14, 28 * 14),
+                crop_size=crop_size,
                 min_ratio=0.05,
                 max_ratio=0.2,
                 by_index=[0],
