@@ -9,14 +9,14 @@ from typing import Sequence
 
 from torch import Tensor
 
-from mmseg.models.builder import HEADS
+from mmseg.registry import MODELS
 from mmseg.utils import ConfigType
 
 from .direction_head import BaseDirectionDecodeHead
 from ..blocks import DPTDecoderBlock
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class DPTDirectionHead(BaseDirectionDecodeHead):
     """
     Vision Transformers for Dense Prediction.

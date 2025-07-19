@@ -9,11 +9,11 @@ from typing import Sequence
 from torch import Tensor
 
 from mmcv.cnn.bricks.norm import build_norm_layer
-from mmseg.models.builder import HEADS
 from mmseg.models.decode_heads.decode_head import BaseDecodeHead
+from mmseg.registry import MODELS
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class LinearHead(BaseDecodeHead):
     """
     Linear decode head for a segmentation task.

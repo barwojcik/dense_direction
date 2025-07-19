@@ -9,12 +9,12 @@ from typing import Sequence
 from torch import Tensor
 
 from mmcv.cnn.bricks.norm import build_norm_layer
-from mmseg.models.builder import HEADS
+from mmseg.registry import MODELS
 
 from .direction_head import BaseDirectionDecodeHead
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class LinearDirectionHead(BaseDirectionDecodeHead):
     """
     Linear decode head for a direction estimation task.

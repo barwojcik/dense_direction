@@ -12,10 +12,10 @@ from torch import Tensor
 import torch.nn as nn
 
 from mmengine.model import BaseModule
-from mmseg.models.builder import BACKBONES
+from mmseg.registry import MODELS
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class Dino2TorchHub(BaseModule):
     """
     Wrapper for the Dinov2 model from PyTorch Hub.
