@@ -5,6 +5,9 @@ _base_ = [
     "../_base_/models/heads/dual_linear_head.py",
 ]
 work_dir = "./outputs/seg_dir/ottawa"
+model = dict(
+    type="SegmentoDirectioner",
+)
 val_evaluator = [
     dict(
         type="DirectionalLossMetric",
