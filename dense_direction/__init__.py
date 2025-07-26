@@ -14,3 +14,4 @@ import mmseg
 from .data import *
 from .evaluation import *
 from .modeling import *
+from .visualization import *
