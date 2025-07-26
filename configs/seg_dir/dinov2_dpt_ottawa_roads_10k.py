@@ -30,7 +30,9 @@ val_evaluator = [
     ),
     dict(
         type="IoUMetric",
-        iou_metrics=["mDice", ],
-    )
+        iou_metrics=[
+            "mDice",
+        ],
+    ),
 ]
 test_evaluator = val_evaluator

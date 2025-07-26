@@ -317,16 +317,18 @@ class SegmentoDirectioner(EncoderDecoder):
                 x1 = max(x2 - w_crop, 0)
                 crop_img = inputs[:, :, y1:y2, x1:x2]
                 # change the image shape to patch shape
-                batch_img_metas[0]['img_shape'] = crop_img.shape[2:]
+                batch_img_metas[0]["img_shape"] = crop_img.shape[2:]
                 # the output of encode_decode is seg logits tensor map
                 # with shape [N, C, H, W]
                 crop_seg_logit, crop_dir_vectors = self.encode_decode(crop_img, batch_img_metas)
-                seg_preds += F.pad(crop_seg_logit,
-                               (int(x1), int(seg_preds.shape[3] - x2), int(y1),
-                                int(seg_preds.shape[2] - y2)))
-                dir_preds += F.pad(crop_dir_vectors,
-                                   (int(x1), int(dir_preds.shape[3] - x2), int(y1),
-                                    int(dir_preds.shape[2] - y2)))
+                seg_preds += F.pad(
+                    crop_seg_logit,
+                    (int(x1), int(seg_preds.shape[3] - x2), int(y1), int(seg_preds.shape[2] - y2)),
+                )
+                dir_preds += F.pad(
+                    crop_dir_vectors,
+                    (int(x1), int(dir_preds.shape[3] - x2), int(y1), int(dir_preds.shape[2] - y2)),
+                )
 
                 count_mat[:, :, y1:y2, x1:x2] += 1
         assert (count_mat == 0).sum() == 0
