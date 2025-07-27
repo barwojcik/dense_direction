@@ -75,10 +75,10 @@ class DualDecodeHead(nn.Module):
             dict[str, Tensor]: a dictionary of loss components
         """
         seg_losses: dict = self.seg_head.loss(inputs, batch_data_samples, train_cfg)
-        seg_losses = {f"seg_head_{key}": value for key, value in seg_losses.items()}
+        seg_losses = {f"seg.{key}": value for key, value in seg_losses.items()}
 
         dir_losses: dict = self.dir_head.loss(inputs, batch_data_samples, train_cfg)
-        dir_losses = {f"dir_head_{key}": value for key, value in dir_losses.items()}
+        dir_losses = {f"dir.{key}": value for key, value in dir_losses.items()}
 
         return seg_losses | dir_losses
 
