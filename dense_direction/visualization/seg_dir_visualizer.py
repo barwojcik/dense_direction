@@ -192,7 +192,7 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
                 )
 
             if "estimated_dirs" in data_sample:
-                imgs_to_draw.append(self._draw_dir_map(image, data_sample))
+                imgs_to_draw.append(self._draw_dir_map(image, data_sample.estimated_dirs))
 
         imgs_to_draw = [img for img in imgs_to_draw if img is not None]
         drawn_img: np.ndarray = np.concatenate(imgs_to_draw, axis=1)
