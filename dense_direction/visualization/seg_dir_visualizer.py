@@ -94,26 +94,61 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
     def _draw_dir_map(
         self,
         image: np.ndarray,
-        dir_map: PixelData,
+        dir_map: np.ndarray,
     ) -> np.ndarray:
         """
-        Draws a map of directions on the given image.
+        Draws a map of directions on a given image.
 
         Args:
             image (np.ndarray): Image to draw directions on.
-            dir_map (PixelData): PixelData of estimated directions.
+            dir_map (np.ndarray): Estimated directions.
 
         Returns:
             np.ndarray: Image with overlay of estimated directions on it.
         """
-        dir_map = dir_map.cpu().data.numpy()
-        dir_map = dir_map.transpose(1, 2, 0)
+
         dir_map = dir_map / np.pi * 255
         dir_map = dir_map.astype(np.uint8)
         dir_map = cv2.applyColorMap(dir_map, cv2.COLORMAP_HSV)
         dir_map = cv2.cvtColor(dir_map, cv2.COLOR_BGR2RGB)
         dir_map = dir_map * self.alpha + image * (1 - self.alpha)
         return dir_map.astype(np.uint8)
+
+    def _draw_dir_maps(
+        self,
+        image: np.ndarray,
+        data_sample: SegDataSample,
+    ) -> np.ndarray:
+        """
+        Draws direction maps on a given image.
+
+        Args:
+            image (np.ndarray): Image to draw directions on.
+            data_sample (SegDataSample): PixelData of estimated directions.
+
+        Returns:
+            np.ndarray: Image with overlay of estimated directions on it.
+        """
+
+        estimated_dirs: np.ndarray = data_sample.estimated_dirs.cpu().data.numpy()
+        dir_maps: list[np.ndarray] = [
+            self._draw_dir_map(image, dir_map) for dir_map in estimated_dirs
+        ]
+
+        if "gt_sem_seg" in data_sample and "dir_classes" in data_sample:
+            gt_sem_seg: np.ndarray = data_sample.gt_sem_seg.cpu().data.numpy()
+            masks: list[np.ndarray] = [
+                np.where(gt_sem_seg==class_idx, 1, 0) for class_idx in data_sample.dir_classes
+            ]
+            masks = [np.concatenate(3*[mask.transpose(1, 2, 0)], axis=-1) for mask in masks]
+            dir_maps = [
+                np.where(mask==0, image, dir_map) for mask, dir_map in zip(masks, dir_maps)
+            ]
+
+        out_map: np.ndarray = np.concatenate(dir_maps, axis=1)
+        self.set_image(out_map)
+
+        return out_map
 
     @master_only
     def add_datasample(
@@ -130,7 +165,7 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
         with_labels: Optional[bool] = True,
     ) -> None:
         """
-        Draw data sample and save to all backends.
+        Draw a data sample and save to all backends.
 
         - If GT and prediction are plotted at the same time, they are displayed in a stitched image
         where the left image is the ground truth and the right image is the prediction.
@@ -186,7 +221,7 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
                 )
 
             if "estimated_dirs" in data_sample:
-                imgs_to_draw.append(self._draw_dir_map(image, data_sample.estimated_dirs))
+                imgs_to_draw.append(self._draw_dir_maps(image, data_sample))
 
         imgs_to_draw = [img for img in imgs_to_draw if img is not None]
         drawn_img: np.ndarray = np.concatenate(imgs_to_draw, axis=1)
