@@ -4,16 +4,12 @@ DirectionalLossMetric metric.
 This module provides a DirectionalLossMetric class that calculates loss value in evaluation.
 """
 
-from typing import Any, Callable, Sequence, Optional
-
-import numpy as np
+from typing import Any, Sequence, Optional
 
 import torch
 from torch import Tensor
 
-from mmengine import FUNCTIONS
 from mmengine.evaluator import BaseMetric
-from mmseg.evaluation.metrics import CityscapesMetric, IoUMetric, DepthMetric
 from mmseg.registry import MODELS, METRICS
 from mmseg.utils import ConfigType
 
