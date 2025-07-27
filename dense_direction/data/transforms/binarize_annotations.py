@@ -23,6 +23,9 @@ class BinarizeAnnotations(BaseTransform):
         - Applies thresholding to set values above 0.5 to 1 and others to 0
     """
 
+    MAX_PIXEL_VALUE = 255
+    THRESHOLD = 0.5
+
     def transform(self, results: dict[str, Any]) -> dict[str, Any]:
         """
         Applies semantic segmentation map transformation.
@@ -52,12 +55,12 @@ class BinarizeAnnotations(BaseTransform):
 
         # normalize values
         if len(gt_semantic_seg.shape) == 2:
-            gt_semantic_seg = gt_semantic_seg / 255
+            gt_semantic_seg = gt_semantic_seg / self.MAX_PIXEL_VALUE
         else:
-            gt_semantic_seg = gt_semantic_seg.mean(axis=2) / 255
+            gt_semantic_seg = gt_semantic_seg.mean(axis=2) / self.MAX_PIXEL_VALUE
 
         # binarize values
-        gt_semantic_seg = np.where(gt_semantic_seg > 0.5, 1.0, 0.0)
+        gt_semantic_seg = np.where(gt_semantic_seg > self.THRESHOLD, 1.0, 0.0)
 
         results["gt_seg_map"] = gt_semantic_seg
         return results

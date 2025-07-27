@@ -130,7 +130,7 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
         with_labels: Optional[bool] = True,
     ) -> None:
         """
-        Draw datasample and save to all backends.
+        Draw data sample and save to all backends.
 
         - If GT and prediction are plotted at the same time, they are displayed in a stitched image
         where the left image is the ground truth and the right image is the prediction.
@@ -142,9 +142,7 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
         Args:
             name (str): The image identifier.
             image (np.ndarray): The image to draw.
-            gt_sample (:obj:`SegDataSample`, optional): GT SegDataSample. Defaults to None.
-            pred_sample (:obj:`SegDataSample`, optional): Prediction SegDataSample.
-                Defaults to None.
+            data_sample (:obj:`SegDataSample`, optional): SegDataSample. Defaults to None.
             draw_gt (bool): Whether to draw GT SegDataSample. Default to True.
             draw_pred (bool): Whether to draw Prediction SegDataSample. Defaults to True.
             show (bool): Whether to display the drawn image. Default to False.
@@ -168,10 +166,8 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
         if draw_gt:
             if "gt_sem_seg" in data_sample:
                 assert classes is not None, (
-                    "class information is "
-                    "not provided when "
-                    "visualizing semantic "
-                    "segmentation results."
+                    "class information is not provided when visualizing semantic segmentation "
+                    "results."
                 )
                 imgs_to_draw.append(
                     self._draw_sem_seg(image, data_sample.gt_sem_seg, classes, palette, with_labels)
@@ -180,10 +176,8 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
         if draw_pred:
             if "pred_sem_seg" in data_sample:
                 assert classes is not None, (
-                    "class information is "
-                    "not provided when "
-                    "visualizing semantic "
-                    "segmentation results."
+                    "class information is not provided when visualizing semantic segmentation "
+                    "results."
                 )
                 imgs_to_draw.append(
                     self._draw_sem_seg(
