@@ -4,4 +4,9 @@ _base_ = [
     "../_base_/schedulers/adamw_onecycle_10k.py",
     "../_base_/models/heads/dpt_dir_head.py",
 ]
+model = dict(
+    decode_head=dict(
+        dir_classes=[0],
+    )
+)
 work_dir = "./outputs/dir/ottawa"
