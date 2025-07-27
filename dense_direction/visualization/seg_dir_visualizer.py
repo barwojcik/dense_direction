@@ -13,8 +13,6 @@ import numpy as np
 
 import mmcv
 from mmengine.dist import master_only
-from mmengine.structures import PixelData
-
 from mmseg.registry import VISUALIZERS
 from mmseg.structures import SegDataSample
 from mmseg.visualization import SegLocalVisualizer
