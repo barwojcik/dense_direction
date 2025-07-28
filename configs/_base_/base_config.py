@@ -8,6 +8,3 @@ log_processor = dict(
     custom_cfg=None,
     num_digits=4,
 )
-runner = dict(
-    type="Runner",
-)
