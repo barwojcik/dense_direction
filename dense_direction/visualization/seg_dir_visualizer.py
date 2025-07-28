@@ -86,7 +86,17 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
             alpha (int, float): The transparency of the segmentation mask. Defaults to 0.8.
         """
         super().__init__(
-            name, image, vis_backends, save_dir, classes, palette, dataset_name, alpha, **kwargs
+            name=name,
+            image=image,
+            vis_backends=vis_backends,
+            save_dir=save_dir,
+            alpha=alpha,
+            **kwargs,
+        )
+        self.set_dataset_meta(
+            palette=palette,
+            classes=classes,
+            dataset_name=dataset_name,
         )
 
     def _draw_dir_map(
