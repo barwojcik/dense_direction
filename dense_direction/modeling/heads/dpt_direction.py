@@ -12,7 +12,7 @@ from torch import Tensor
 from mmseg.registry import MODELS
 from mmseg.utils import ConfigType
 
-from .direction_head import BaseDirectionDecodeHead
+from .base_direction import BaseDirectionDecodeHead
 from ..blocks import DPTDecoderBlock
 
 

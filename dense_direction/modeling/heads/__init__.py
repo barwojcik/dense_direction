@@ -2,10 +2,10 @@
 Module containing model head classes.
 """
 
-from .dpt_direction_head import DPTDirectionHead
+from .dpt_direction import DPTDirectionHead
 from .dual_head import DualDecodeHead
-from .linear_direction_head import LinearDirectionHead
-from .linear_segmentation_head import LinearHead
+from .linear_direction import LinearDirectionHead
+from .linear_segmentation import LinearHead
 
 __all__ = [
     DPTDirectionHead.__name__,

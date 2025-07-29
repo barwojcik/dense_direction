@@ -11,7 +11,7 @@ from torch import Tensor
 from mmcv.cnn.bricks.norm import build_norm_layer
 from mmseg.registry import MODELS
 
-from .direction_head import BaseDirectionDecodeHead
+from .base_direction import BaseDirectionDecodeHead
 
 
 @MODELS.register_module()
