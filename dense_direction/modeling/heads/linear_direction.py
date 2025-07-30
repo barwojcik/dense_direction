@@ -27,12 +27,12 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
 
     def __init__(self, **kwargs) -> None:
         """
-        Linear decode head for a segmentation task.
+        Linear decode head for a direction estimation task.
 
         Simple linear head with optional normalization layer before final prediction.
 
         Args:
-            **kwargs: Additional arguments to pass to BaseDecodeHead.
+            **kwargs: Additional arguments to pass to BaseDirectionDecodeHead.
         """
         super().__init__(**kwargs)
         assert self.in_channels == self.channels
