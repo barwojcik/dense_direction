@@ -7,6 +7,7 @@ from .dual_head import DualDecodeHead
 from .dummy_direction import DummyDirectionHead
 from .linear_direction import LinearDirectionHead
 from .linear_segmentation import LinearHead
+from .multiscale_direction import MultiscaleLossDirectionHead
 
 __all__ = [
     DPTDirectionHead.__name__,
@@ -14,4 +15,5 @@ __all__ = [
     DummyDirectionHead.__name__,
     LinearDirectionHead.__name__,
     LinearHead.__name__,
+    MultiscaleLossDirectionHead.__name__,
 ]
