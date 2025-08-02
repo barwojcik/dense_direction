@@ -4,7 +4,7 @@ _base_ = [
 model = dict(
     decode_head=dict(
         type="DualDecodeHead",
-        dir_head_config=dict(
+        dir_head=dict(
             type="LinearDirectionHead",
             in_channels=384,
             channels=384,
@@ -29,7 +29,7 @@ model = dict(
                 ),
             ],
         ),
-        seg_head_config=dict(
+        seg_head=dict(
             type="LinearHead",
             num_classes=1,
             in_channels=384,

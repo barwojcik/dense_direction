@@ -22,14 +22,14 @@ class DualDecodeHead(nn.Module):
     This class is a wrapper that wraps segmentation and direction heads.
 
     Args:
-         seg_head_config (ConfigType): The config for the segmentation head.
-         dir_head_config (ConfigType): The config for the direction head.
+         seg_head (ConfigType): The config for the segmentation head.
+         dir_head (ConfigType): The config for the direction head.
     """
 
     def __init__(
         self,
-        seg_head_config: ConfigType,
-        dir_head_config: ConfigType,
+        seg_head: ConfigType,
+        dir_head: ConfigType,
     ) -> None:
         """
         Initializes DualDecodeHead class.
@@ -37,13 +37,13 @@ class DualDecodeHead(nn.Module):
         This class is a wrapper that wraps segmentation and direction heads.
 
         Args:
-             seg_head_config (ConfigType): The config for the segmentation head.
-             dir_head_config (ConfigType): The config for the direction head.
+             seg_head (ConfigType): The config for the segmentation head.
+             dir_head (ConfigType): The config for the direction head.
         """
 
         super().__init__()
-        self.seg_head = MODELS.build(seg_head_config)
-        self.dir_head = MODELS.build(dir_head_config)
+        self.seg_head = MODELS.build(seg_head)
+        self.dir_head = MODELS.build(dir_head)
 
         self.align_corners = self.seg_head.align_corners
         self.num_classes = self.seg_head.num_classes

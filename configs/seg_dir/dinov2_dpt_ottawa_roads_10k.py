@@ -8,7 +8,7 @@ work_dir = "./outputs/seg_dir/ottawa"
 model = dict(
     type="SegmentoDirectioner",
     decode_head=dict(
-        dir_head_config=dict(
+        dir_head=dict(
             dir_classes=[0],
         ),
     ),
