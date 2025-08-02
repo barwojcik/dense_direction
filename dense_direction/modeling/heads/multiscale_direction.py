@@ -113,11 +113,12 @@ class MultiscaleLossDirectionHead(nn.Module):
             dict[str, Tensor]: a dictionary of loss components
         """
 
-        losses: dict = self.real_head.loss(inputs, batch_data_samples, train_cfg)
+        dir_vectors: Tensor = self.real_head.forward(inputs)
+        losses: dict = self.real_head.loss_by_feat(dir_vectors, batch_data_samples)
         losses = {f"dir1.{key}": value for key, value in losses.items()}
 
         for head_idx, dummy_head in enumerate(self.dummy_heads):
-            dummy_losses: dict = dummy_head.loss(inputs, batch_data_samples, train_cfg)
+            dummy_losses: dict = dummy_head.loss_by_feat(dir_vectors, batch_data_samples)
             dummy_losses = {f"dir{head_idx+2}.{key}": value for key, value in dummy_losses.items()}
             losses.update(dummy_losses)
 
