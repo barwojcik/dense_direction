@@ -207,28 +207,14 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         self.out_channels: int = 2 * self.num_classes
 
         loss_decode = loss_decode or self.DEFAULT_LOSS
-        if isinstance(loss_decode, dict):
-            self.loss_decode = build_loss(loss_decode)
-        elif isinstance(loss_decode, (list, tuple)):
-            self.loss_decode = nn.ModuleList()
-            for loss in loss_decode:
-                self.loss_decode.append(build_loss(loss))
-        else:
-            raise TypeError(
-                f"loss_decode must be a dict or sequence of dict,\
-                but got {type(loss_decode)}"
-            )
+        self._init_loss(loss_decode)
 
         if sampler is not None:
             self.sampler = build_pixel_sampler(sampler, context=self)
         else:
             self.sampler = None
 
-        self.conv_dir = nn.Conv2d(channels, self.out_channels, kernel_size=1)
-        if dropout_ratio > 0:
-            self.dropout = nn.Dropout2d(dropout_ratio)
-        else:
-            self.dropout = None
+        self._init_conv_dir()
 
     def extra_repr(self):
         """Extra repr."""
@@ -271,6 +257,28 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
             assert isinstance(in_channels, int)
             assert isinstance(in_index, int)
             self.in_channels = in_channels
+
+    def _init_loss(self, loss_decode):
+        """Initialize ``loss_decode``"""
+        if isinstance(loss_decode, dict):
+            self.loss_decode = build_loss(loss_decode)
+        elif isinstance(loss_decode, (list, tuple)):
+            self.loss_decode = nn.ModuleList()
+            for loss in loss_decode:
+                self.loss_decode.append(build_loss(loss))
+        else:
+            raise TypeError(
+                f"loss_decode must be a dict or sequence of dict,\
+                but got {type(loss_decode)}"
+            )
+
+    def _init_conv_dir(self):
+        """Initialize ``conv_dir`` and ``dropout`` layers."""
+        self.conv_dir = nn.Conv2d(self.channels, self.out_channels, kernel_size=1)
+        if self.dropout_ratio > 0:
+            self.dropout = nn.Dropout2d(self.dropout_ratio)
+        else:
+            self.dropout = None
 
     def _transform_inputs(self, inputs: list[Tensor]) -> Tensor | list[Tensor]:
         """

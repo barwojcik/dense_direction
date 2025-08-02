@@ -1,7 +1,7 @@
 """
 Dual Decode Head class for simultaneous segmentation and direction estimation.
 
-This module provides a DualDecodeHead class, this class is a wrapper that wraps segmentation and
+This module provides a DualDecodeHead class. This class is a wrapper that wraps segmentation and
 direction heads.
 """
 
@@ -31,6 +31,16 @@ class DualDecodeHead(nn.Module):
         seg_head_config: ConfigType,
         dir_head_config: ConfigType,
     ) -> None:
+        """
+        Initializes DualDecodeHead class.
+
+        This class is a wrapper that wraps segmentation and direction heads.
+
+        Args:
+             seg_head_config (ConfigType): The config for the segmentation head.
+             dir_head_config (ConfigType): The config for the direction head.
+        """
+
         super().__init__()
         self.seg_head = MODELS.build(seg_head_config)
         self.dir_head = MODELS.build(dir_head_config)
