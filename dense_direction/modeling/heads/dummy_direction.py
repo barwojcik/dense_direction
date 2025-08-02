@@ -8,6 +8,7 @@ layers, it simply returns the input tensor. It is meant to be used for multiscal
 from typing import Sequence
 
 from torch import Tensor
+from torch import nn
 
 from mmseg.registry import MODELS
 from mmseg.utils import ConfigType
@@ -45,6 +46,7 @@ class DummyDirectionHead(BaseDirectionDecodeHead):
         Args:
             **kwargs: Additional arguments to pass to BaseDirectionDecodeHead.
         """
+        nn.Module.__init__(self)
         self.dir_classes: Sequence[int] = dir_classes or (1,)
         self.num_classes: int = len(self.dir_classes)
         self.ignore_index: int = ignore_index
@@ -52,6 +54,7 @@ class DummyDirectionHead(BaseDirectionDecodeHead):
         self.pre_norm_vectors: bool = pre_norm_vectors
         self.post_norm_vectors: bool = post_norm_vectors
         self.gt_scale_factor: float = gt_scale_factor
+        self.sampler = None
 
         # 2 vector components per class
         self.in_channels: int = 2 * self.num_classes
