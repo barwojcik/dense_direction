@@ -1,12 +1,17 @@
 _base_ = [
     "../_base_/base_config.py",
-    "../_base_/datasets/concrete_cracks.py",
+    "../_base_/datasets/ottawa_roads.py",
     "../_base_/schedulers/adamw_onecycle_10k.py",
-    "../_base_/models/heads/dpt_dual_linear.py",
+    "../_base_/models/heads/dual_linear.py",
 ]
-work_dir = "./outputs/seg_dir/cracks"
+work_dir = "./outputs/seg_dir/ottawa"
 model = dict(
     type="SegmentoDirectioner",
+    decode_head=dict(
+        dir_head=dict(
+            dir_classes=[0],
+        ),
+    ),
 )
 val_evaluator = [
     dict(

@@ -2,7 +2,7 @@ _base_ = [
     "../_base_/base_config.py",
     "../_base_/datasets/ottawa_roads.py",
     "../_base_/schedulers/adamw_onecycle_10k.py",
-    "../_base_/models/heads/dual_linear_head.py",
+    "../_base_/models/heads/dpt_dual_linear.py",
 ]
 work_dir = "./outputs/seg_dir/ottawa"
 model = dict(
