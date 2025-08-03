@@ -61,7 +61,6 @@ class EfficientDirectionalLoss(nn.Module):
         loss_name: str = "loss_dir",
         **kwargs,
     ) -> None:
-        super().__init__()
         """
         Initializes the DirectionalLoss instance.
 
@@ -82,6 +81,7 @@ class EfficientDirectionalLoss(nn.Module):
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
         """
 
+        super().__init__()
         self.k_size: int = 2 * pad + 1
         self.pad: int = pad
         self.div: int = div
