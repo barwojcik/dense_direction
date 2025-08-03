@@ -64,16 +64,16 @@ class MultiscaleLossDirectionHead(nn.Module):
         Builds dummy heads from config.
         """
         base_config: ConfigType = real_head.copy()
-        base_config["type"] = self.DEFAULT_DUMMY_HEAD
+        base_config.type = self.DEFAULT_DUMMY_HEAD
 
         heads: list[nn.Module] = []
         if isinstance(dummy_heads, list):
             for dummy_config in dummy_heads:
-                dummy_config = base_config | dummy_config
+                dummy_config = base_config.merge(dummy_config)
                 dummy_head = MODELS.build(dummy_config)
                 heads.append(dummy_head)
         else:
-            dummy_config = base_config | dummy_heads
+            dummy_config = base_config.merge(dummy_heads)
             dummy_head = MODELS.build(dummy_config)
             heads.append(dummy_head)
 
