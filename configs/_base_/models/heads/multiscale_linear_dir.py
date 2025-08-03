@@ -6,11 +6,9 @@ model = dict(
         layers_to_extract=1,
     ),
     decode_head=dict(
-        type="MultiScaleDirectionHead",
+        type="MultiscaleLossDirectionHead",
         real_head=dict(
             type="LinearDirectionHead",
-            embed_dims=384,
-            patch_size=14,
             in_channels=384,
             channels=384,
             dropout_ratio=0,

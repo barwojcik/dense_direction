@@ -6,7 +6,9 @@ _base_ = [
 ]
 model = dict(
     decode_head=dict(
-        dir_classes=[0],
+        real_head=dict(
+            dir_classes=[0],
+        ),
     )
 )
 work_dir = "./outputs/dir/ottawa"

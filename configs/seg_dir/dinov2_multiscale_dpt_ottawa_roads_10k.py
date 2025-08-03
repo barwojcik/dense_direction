@@ -9,7 +9,9 @@ model = dict(
     type="SegmentoDirectioner",
     decode_head=dict(
         dir_head=dict(
-            dir_classes=[0],
+            real_head=dict(
+                dir_classes=[0],
+            ),
         ),
     ),
 )

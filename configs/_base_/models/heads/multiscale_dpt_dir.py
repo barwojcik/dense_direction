@@ -3,11 +3,10 @@ _base_ = [
 ]
 model = dict(
     decode_head=dict(
-        type="MultiScaleDirectionHead",
+        type="MultiscaleLossDirectionHead",
         real_head=dict(
             type="LinearDirectionHead",
             in_index=[0, 1, 2, 3],
-            embed_dims=384,
             patch_size=14,
             in_channels=384,
             input_transform="multiple_select",
