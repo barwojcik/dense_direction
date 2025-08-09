@@ -92,22 +92,22 @@ class Directioner(EncoderDecoder):
         self.align_corners = self.decode_head.align_corners
         self.out_channels = 2 * len(self.decode_head.dir_classes)
 
-    def _convert_to_angles(self, vector_filed: Tensor) -> Tensor:
+    def _convert_to_angles(self, vector_field: Tensor) -> Tensor:
         """
         Converts 2D vector field into angular values.
 
         Args:
-            vector_filed (Tensor): Per class 2D vector field of shape (K*2, H, W).
+            vector_field (Tensor): Per class 2D vector field of shape (K*2, H, W).
 
         Returns:
             angles (Tensor): Per class direction angle values in radians (from 0 to π) of shape
             (K, H, W).
         """
-        h, w = vector_filed.shape[-2:]
-        vector_filed = vector_filed.reshape(-1, 2, h, w)  # 2K, H, W -> K, 2, H, W
+        h, w = vector_field.shape[-2:]
+        vector_field = vector_field.reshape(-1, 2, h, w)  # 2K, H, W -> K, 2, H, W
 
-        x_component: Tensor = vector_filed[:, 0, :, :]  # K, H, W
-        y_component: Tensor = vector_filed[:, 1, :, :]  # K, H, W
+        x_component: Tensor = vector_field[:, 0, :, :]  # K, H, W
+        y_component: Tensor = vector_field[:, 1, :, :]  # K, H, W
 
         angles: Tensor = torch.atan2(y_component, x_component)  # K, H, W
         angles = (angles + self.pi) / 2
