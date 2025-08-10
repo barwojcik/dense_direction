@@ -152,6 +152,41 @@ class Directioner(EncoderDecoder):
 
         return prediction.flip(dims=(1,))
 
+    def _transform_prediction(self, prediction: Tensor, data_sample: SegDataSample) -> Tensor:
+        """
+        Transforms a prediction tensor based on the metainfo of the data sample.
+
+        Args:
+            prediction (Tensor): The tensor of shape (C, H, W) to be flipped.
+            data_sample (SegDataSample): The seg data sample.
+
+        Returns:
+            Tensor: Transformed prediction tensor.
+        """
+        if "img_padding_size" in data_sample.metainfo:
+            padding = data_sample.metainfo["img_padding_size"]
+            prediction = self._remove_padding(prediction, padding)
+
+        if "padding_size" in data_sample.metainfo:
+            padding = data_sample.metainfo["padding_size"]
+            prediction = self._remove_padding(prediction, padding)
+
+        if "filp" in data_sample.metainfo:
+            flip = data_sample.metainfo["flip"]
+            prediction = self._unflip(prediction, flip)
+
+        if "img_shape" in data_sample.metainfo:
+            image_size = data_sample.metainfo["img_shape"]
+            prediction = resize(
+                prediction,
+                size=image_size,
+                mode="bilinear",
+                align_corners=self.align_corners,
+                warning=False,
+            )
+
+        return prediction
+
     def postprocess_result(
         self, vector_fields: Tensor, data_samples: OptSampleList = None
     ) -> SampleList:
@@ -176,29 +211,7 @@ class Directioner(EncoderDecoder):
             data_samples = [SegDataSample() for _ in range(vector_fields)]
 
         for vector_field, data_sample in zip(vector_fields, data_samples):
-
-            if "img_padding_size" in data_sample.metainfo:
-                padding = data_sample.metainfo["img_padding_size"]
-                vector_field = self._remove_padding(vector_field, padding)
-
-            if "padding_size" in data_sample.metainfo:
-                padding = data_sample.metainfo["padding_size" ]
-                vector_field = self._remove_padding(vector_field, padding)
-
-            if "filp" in data_sample.metainfo:
-                flip = data_sample.metainfo["flip"]
-                vector_field = self._unflip(vector_field, flip)
-
-            if "img_shape" in data_sample.metainfo:
-                image_size = data_sample.metainfo["img_shape"]
-                vector_field = resize(
-                    vector_field,
-                    size=image_size,
-                    mode="bilinear",
-                    align_corners=self.align_corners,
-                    warning=False,
-                )
-
+            vector_field = self._transform_prediction(vector_field, data_sample)
             angles = self._convert_to_angles(vector_field)
 
             data_sample.set_data(
