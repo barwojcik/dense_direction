@@ -114,14 +114,49 @@ class Directioner(EncoderDecoder):
 
         return angles
 
+    @staticmethod
+    def _remove_padding(prediction: Tensor, padding: list[int]) -> Tensor:
+        """
+        Removes padding from a given tensor based on the specified padding values.
+
+        Args:
+            prediction (Tensor): The tensor of shape (C, H, W) to be flipped.
+            padding (list[int): A list of integers specifying the padding dimensions in the
+            order [left, right, top, bottom].
+
+        Returns:
+            Tensor: Tensor without padding.
+        """
+        padding_left, padding_right, padding_top, padding_bottom = padding
+        _, h, w = prediction.shape
+
+        return prediction[:, padding_top: h - padding_bottom, padding_left: w - padding_right]
+
+    @staticmethod
+    def _unflip(prediction: Tensor, flip_type: str) -> Tensor:
+        """
+        Flips a given prediction tensor along a specified axis.
+
+        Args:
+            prediction (Tensor): The tensor of shape (C, H, W) to be flipped.
+            flip_type (str): A string specifying the flip type.
+
+        Returns:
+            Tensor: Flipped vector field tensor.
+        """
+        if flip_type == "horizontal":
+            return prediction.flip(dims=(2,))
+
+        return prediction.flip(dims=(1,))
+
     def postprocess_result(
-        self, dir_vector_field: Tensor, data_samples: OptSampleList = None
+        self, vector_fields: Tensor, data_samples: OptSampleList = None
     ) -> SampleList:
         """
         Converts the list of results to `SegDataSample`.
 
         Args:
-           dir_vector_field (Tensor): The estimated directions in the form of 2D vector field for
+           vector_fields (Tensor): The estimated directions in the form of 2D vector field for
                each input image.
            data_samples (list[:obj:`SegDataSample`]): The seg data samples. It usually includes
                information such as `metainfo` and `gt_sem_seg`. Default to None.
@@ -129,61 +164,47 @@ class Directioner(EncoderDecoder):
         Returns:
            list[:obj:`SegDataSample`]: Direction estimation results of the input images.
                Each SegDataSample usually contains:
-
-           - ``estimated_dirs``(PixelData): Estimated directions as per pixel angle.
-           - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
-               conversion into angles.
+               - ``estimated_dirs``(PixelData): Estimated directions as per pixel angle.
+               - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
+                   conversion into angles.
+               - ``dir_classes``(list): A list of direction classes.
         """
-        batch_size, c, h, w = dir_vector_field.shape
-
         if data_samples is None:
-            data_samples = [SegDataSample() for _ in range(batch_size)]
-            only_prediction = True
-        else:
-            only_prediction = False
+            data_samples = [SegDataSample() for _ in range(vector_fields)]
 
-        for i in range(batch_size):
-            if not only_prediction:
-                img_meta = data_samples[i].metainfo
-                # remove padding area
-                if "img_padding_size" not in img_meta:
-                    padding_size = img_meta.get("padding_size", [0] * 4)
-                else:
-                    padding_size = img_meta["img_padding_size"]
-                padding_left, padding_right, padding_top, padding_bottom = padding_size
-                # i_dir_vfield shape is 1, c, h, w after remove padding
-                i_dir_vfield = dir_vector_field[
-                    i : i + 1,
-                    :,
-                    padding_top : h - padding_bottom,
-                    padding_left : w - padding_right,
-                ]
+        for vector_field, data_sample in zip(vector_fields, data_samples):
 
-                flip = img_meta.get("flip", None)
-                if flip:
-                    flip_direction = img_meta.get("flip_direction", None)
-                    assert flip_direction in ["horizontal", "vertical"]
-                    if flip_direction == "horizontal":
-                        i_dir_vfield = i_dir_vfield.flip(dims=(3,))
-                    else:
-                        i_dir_vfield = i_dir_vfield.flip(dims=(2,))
+            if "img_padding_size" in data_sample.metainfo:
+                padding = data_sample.metainfo["img_padding_size"]
+                vector_field = self._remove_padding(vector_field, padding)
 
-                i_dir_vfield = resize(
-                    i_dir_vfield,
-                    size=img_meta["img_shape"],
+            if "padding_size" in data_sample.metainfo:
+                padding = data_sample.metainfo["img_padding_size"]
+                vector_field = self._remove_padding(vector_field, padding)
+
+            if "filp" in data_sample.metainfo:
+                flip = data_sample.metainfo["flip"]
+                if flip not in ["horizontal", "vertical"]:
+                    raise ValueError(f"flip type {flip} is not supported.")
+
+                vector_field = self._unflip(vector_field, flip)
+
+            if "img_shape" in data_sample.metainfo:
+                image_size = data_sample.metainfo["img_shape"]
+                vector_field = resize(
+                    vector_field,
+                    size=image_size,
                     mode="bilinear",
                     align_corners=self.align_corners,
                     warning=False,
-                ).squeeze()
-            else:
-                i_dir_vfield = dir_vector_field[i]
+                )
 
-            i_dir_angles = self._convert_to_angles(i_dir_vfield)
+            angles = self._convert_to_angles(vector_field)
 
-            data_samples[i].set_data(
+            data_sample.set_data(
                 {
-                    "estimated_vs": PixelData(**{"data": i_dir_vfield}),
-                    "estimated_dirs": PixelData(**{"data": i_dir_angles}),
+                    "estimated_vs": PixelData(**{"data": vector_field}),
+                    "estimated_dirs": PixelData(**{"data": angles}),
                     "dir_classes": self.decode_head.dir_classes,
                 }
             )
