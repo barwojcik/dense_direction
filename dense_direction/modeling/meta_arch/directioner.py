@@ -179,7 +179,7 @@ class Directioner(EncoderDecoder):
                 vector_field = self._remove_padding(vector_field, padding)
 
             if "padding_size" in data_sample.metainfo:
-                padding = data_sample.metainfo["img_padding_size"]
+                padding = data_sample.metainfo["padding_size" ]
                 vector_field = self._remove_padding(vector_field, padding)
 
             if "filp" in data_sample.metainfo:
