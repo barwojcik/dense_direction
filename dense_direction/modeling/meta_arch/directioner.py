@@ -177,12 +177,12 @@ class Directioner(EncoderDecoder):
         if "img_shape" in data_sample.metainfo:
             image_size = data_sample.metainfo["img_shape"]
             prediction = resize(
-                prediction,
+                prediction.unsqueeze(0),
                 size=image_size,
                 mode="bilinear",
                 align_corners=self.align_corners,
                 warning=False,
-            )
+            ).squeeze(0)
 
         return prediction
 
