@@ -144,6 +144,9 @@ class Directioner(EncoderDecoder):
         Returns:
             Tensor: Flipped vector field tensor.
         """
+        if flip_type not in ["horizontal", "vertical"]:
+            raise ValueError(f"flip type {flip_type} is not supported.")
+
         if flip_type == "horizontal":
             return prediction.flip(dims=(2,))
 
@@ -184,9 +187,6 @@ class Directioner(EncoderDecoder):
 
             if "filp" in data_sample.metainfo:
                 flip = data_sample.metainfo["flip"]
-                if flip not in ["horizontal", "vertical"]:
-                    raise ValueError(f"flip type {flip} is not supported.")
-
                 vector_field = self._unflip(vector_field, flip)
 
             if "img_shape" in data_sample.metainfo:
