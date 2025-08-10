@@ -132,7 +132,7 @@ class EfficientDirectionalLoss(nn.Module):
             Tensor: Direction as values that range from 0 to 1.
         """
 
-        x_component, y_component = torch.unbind(predictions, dim=1)  # n * k, h, w
+        x_component, y_component = torch.unbind(predictions, dim=2)  # n * k, h, w
 
         # Angles in radians in range of pi to -pi
         angles = torch.atan2(y_component, x_component).unsqueeze(2)  # n, k, 1, h, w
