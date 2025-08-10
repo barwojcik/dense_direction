@@ -115,8 +115,7 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
             np.ndarray: Image with overlay of estimated directions on it.
         """
 
-        dir_map = dir_map / np.pi * 255
-        dir_map = dir_map.astype(np.uint8)
+        dir_map = (dir_map / np.pi * 255).astype(np.uint8)
         dir_map = cv2.applyColorMap(dir_map, cv2.COLORMAP_HSV)
         dir_map = cv2.cvtColor(dir_map, cv2.COLOR_BGR2RGB)
         dir_map = dir_map * self.alpha + image * (1 - self.alpha)

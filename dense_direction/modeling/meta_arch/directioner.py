@@ -106,8 +106,7 @@ class Directioner(EncoderDecoder):
         h, w = vector_field.shape[-2:]
         vector_field = vector_field.reshape(-1, 2, h, w)  # 2K, H, W -> K, 2, H, W
 
-        x_component: Tensor = vector_field[:, 0, :, :]  # K, H, W
-        y_component: Tensor = vector_field[:, 1, :, :]  # K, H, W
+        x_component, y_component = torch.unbind(vector_field, dim=1)  # K, H, W
 
         angles: Tensor = torch.atan2(y_component, x_component)  # K, H, W
         angles = (angles + self.pi) / 2
