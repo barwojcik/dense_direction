@@ -13,21 +13,19 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from mmengine.structures import PixelData
-from mmseg.models import EncoderDecoder
 from mmseg.registry import MODELS
 from mmseg.structures import SegDataSample
 from mmseg.utils import (
     ConfigType,
-    OptConfigType,
-    OptMultiConfig,
     OptSampleList,
     SampleList,
 )
-from mmseg.models.utils import resize
+
+from .directioner import Directioner
 
 
 @MODELS.register_module()
-class SegmentoDirectioner(EncoderDecoder):
+class SegmentoDirectioner(Directioner):
     """
     SegmentoDirectioner, an EncoderDecoder for simultaneous semantic segmentation and direction
     estimation.
@@ -48,31 +46,6 @@ class SegmentoDirectioner(EncoderDecoder):
         init_cfg (dict, optional): The weight initialized config for :class:`BaseModule`.
     """
 
-    def __init__(
-        self,
-        backbone: ConfigType,
-        decode_head: ConfigType,
-        neck: OptConfigType = None,
-        auxiliary_head: OptConfigType = None,
-        train_cfg: OptConfigType = None,
-        test_cfg: OptConfigType = None,
-        data_preprocessor: OptConfigType = None,
-        pretrained: Optional[str] = None,
-        init_cfg: OptMultiConfig = None,
-    ) -> None:
-        super().__init__(
-            backbone=backbone,
-            decode_head=decode_head,
-            neck=neck,
-            auxiliary_head=auxiliary_head,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            data_preprocessor=data_preprocessor,
-            pretrained=pretrained,
-            init_cfg=init_cfg,
-        )
-        self.register_buffer("pi", torch.tensor(np.pi).float())
-
     def _init_decode_head(self, decode_head: ConfigType) -> None:
         """Initialize ``decode_head``"""
         self.decode_head = MODELS.build(decode_head)
@@ -81,27 +54,15 @@ class SegmentoDirectioner(EncoderDecoder):
         self.out_channels = self.decode_head.out_channels
         self.out_dir_channels = 2 * len(self.decode_head.dir_classes)
 
-    def _convert_to_angles(self, vector_field: Tensor) -> Tensor:
+    def _get_seg_pred(self, seg_logit: Tensor) -> Tensor:
         """
-        Converts 2D vector field into angular values.
 
-        Args:
-            vector_field (Tensor): Per class 2D vector field of shape (K*2, H, W).
-
-        Returns:
-            angles (Tensor): Per class direction angle values in radians (from 0 to π) of shape
-            (K, H, W).
         """
-        h, w = vector_field.shape[-2:]
-        vector_field = vector_field.reshape(-1, 2, h, w)  # 2K, H, W -> K, 2, H, W
+        if seg_logit.shape[0] == 1:
+            seg_logit = seg_logit.sigmoid()
+            return (seg_logit > self.decode_head.threshold).to(seg_logit)
 
-        x_component: Tensor = vector_field[:, 0, :, :]  # K, H, W
-        y_component: Tensor = vector_field[:, 1, :, :]  # K, H, W
-
-        angles: Tensor = torch.atan2(y_component, x_component)  # K, H, W
-        angles = (angles + self.pi) / 2
-
-        return angles
+        return seg_logit.argmax(dim=0, keepdim=True)
 
     def postprocess_seg_result(
         self, seg_logits: Tensor, data_samples: OptSampleList = None
@@ -115,138 +76,25 @@ class SegmentoDirectioner(EncoderDecoder):
         Returns:
             list[:obj:`SegDataSample`]: Segmentation results of the input images.
                 Each SegDataSample usually contain:
-
-            - ``pred_sem_seg``(PixelData): Prediction of semantic segmentation.
-            - ``seg_logits``(PixelData): Predicted logits of semantic segmentation before
-                normalization.
+                - ``pred_sem_seg``(PixelData): Prediction of semantic segmentation.
+                - ``seg_logits``(PixelData): Predicted logits of semantic segmentation before
+                    normalization.
+                - ``estimated_dirs``(PixelData): Estimated directions as per pixel angle.
+                - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
+                   conversion into angles.
+                - ``dir_classes``(list): A list of direction classes.
         """
-        batch_size, C, H, W = seg_logits.shape
-
         if data_samples is None:
-            data_samples = [SegDataSample() for _ in range(batch_size)]
-            only_prediction = True
-        else:
-            only_prediction = False
+            data_samples = [SegDataSample() for _ in range(seg_logits)]
 
-        for i in range(batch_size):
-            if not only_prediction:
-                img_meta = data_samples[i].metainfo
-                # remove padding area
-                if "img_padding_size" not in img_meta:
-                    padding_size = img_meta.get("padding_size", [0] * 4)
-                else:
-                    padding_size = img_meta["img_padding_size"]
-                padding_left, padding_right, padding_top, padding_bottom = padding_size
-                # i_seg_logits shape is 1, C, H, W after remove padding
-                i_seg_logits = seg_logits[
-                    i : i + 1, :, padding_top : H - padding_bottom, padding_left : W - padding_right
-                ]
+        for seg_logit, data_sample in zip(seg_logits, data_samples):
+            seg_logit = self._transform_prediction(seg_logit, data_sample)
+            seg_pred = self._get_seg_pred(seg_logit)
 
-                flip = img_meta.get("flip", None)
-                if flip:
-                    flip_direction = img_meta.get("flip_direction", None)
-                    assert flip_direction in ["horizontal", "vertical"]
-                    if flip_direction == "horizontal":
-                        i_seg_logits = i_seg_logits.flip(dims=(3,))
-                    else:
-                        i_seg_logits = i_seg_logits.flip(dims=(2,))
-
-                # resize as original shape
-                i_seg_logits = resize(
-                    i_seg_logits,
-                    size=img_meta["img_shape"],
-                    mode="bilinear",
-                    align_corners=self.align_corners,
-                    warning=False,
-                ).squeeze(0)
-            else:
-                i_seg_logits = seg_logits[i]
-
-            if C > 1:
-                i_seg_pred = i_seg_logits.argmax(dim=0, keepdim=True)
-            else:
-                i_seg_logits = i_seg_logits.sigmoid()
-                i_seg_pred = (i_seg_logits > self.decode_head.threshold).to(i_seg_logits)
-            data_samples[i].set_data(
+            data_sample.set_data(
                 {
-                    "seg_logits": PixelData(**{"data": i_seg_logits}),
-                    "pred_sem_seg": PixelData(**{"data": i_seg_pred}),
-                }
-            )
-
-        return data_samples
-
-    def postprocess_dir_result(
-        self, dir_vector_field: Tensor, data_samples: OptSampleList = None
-    ) -> SampleList:
-        """
-        Converts the list of direction results to `SegDataSample`.
-
-        Args:
-           dir_vector_field (Tensor): The estimated directions in the form of 2D vector field for
-               each input image.
-           data_samples (list[:obj:`SegDataSample`]): The seg data samples. It usually includes
-               information such as `metainfo` and `gt_sem_seg`. Default to None.
-
-        Returns:
-           list[:obj:`SegDataSample`]: Direction estimation results of the input images.
-               Each SegDataSample usually contains:
-
-           - ``estimated_dirs``(PixelData): Estimated directions as per pixel angle.
-           - ``estimated_vs``(PixelData): Estimated directions as per pixel 2D vector, before
-               conversion into angles.
-        """
-        batch_size, c, h, w = dir_vector_field.shape
-
-        if data_samples is None:
-            data_samples = [SegDataSample() for _ in range(batch_size)]
-            only_prediction = True
-        else:
-            only_prediction = False
-
-        for i in range(batch_size):
-            if not only_prediction:
-                img_meta = data_samples[i].metainfo
-                # remove padding area
-                if "img_padding_size" not in img_meta:
-                    padding_size = img_meta.get("padding_size", [0] * 4)
-                else:
-                    padding_size = img_meta["img_padding_size"]
-                padding_left, padding_right, padding_top, padding_bottom = padding_size
-                # i_dir_vfield shape is 1, c, h, w after remove padding
-                i_dir_vfield = dir_vector_field[
-                    i : i + 1,
-                    :,
-                    padding_top : h - padding_bottom,
-                    padding_left : w - padding_right,
-                ]
-
-                flip = img_meta.get("flip", None)
-                if flip:
-                    flip_direction = img_meta.get("flip_direction", None)
-                    assert flip_direction in ["horizontal", "vertical"]
-                    if flip_direction == "horizontal":
-                        i_dir_vfield = i_dir_vfield.flip(dims=(3,))
-                    else:
-                        i_dir_vfield = i_dir_vfield.flip(dims=(2,))
-
-                i_dir_vfield = resize(
-                    i_dir_vfield,
-                    size=img_meta["img_shape"],
-                    mode="bilinear",
-                    align_corners=self.align_corners,
-                    warning=False,
-                ).squeeze()
-            else:
-                i_dir_vfield = dir_vector_field[i]
-
-            i_dir_angles = self._convert_to_angles(i_dir_vfield)
-
-            data_samples[i].set_data(
-                {
-                    "estimated_vs": PixelData(**{"data": i_dir_vfield}),
-                    "estimated_dirs": PixelData(**{"data": i_dir_angles}),
-                    "dir_classes": self.decode_head.dir_classes,
+                    "seg_logits": PixelData(**{"data": seg_logit}),
+                    "pred_sem_seg": PixelData(**{"data": seg_pred}),
                 }
             )
 
@@ -273,8 +121,12 @@ class SegmentoDirectioner(EncoderDecoder):
                conversion into angles.
         """
         seg_logits, dir_vector_field = results
+
+        # it's equivalent to EncoderDecoder.postprocess_result()
         data_samples = self.postprocess_seg_result(seg_logits, data_samples)
-        data_samples = self.postprocess_dir_result(dir_vector_field, data_samples)
+
+        # call to Directioner postprocess_result method
+        data_samples = super().postprocess_result(dir_vector_field, data_samples)
 
         return data_samples
 
