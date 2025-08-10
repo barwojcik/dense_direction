@@ -5,9 +5,9 @@ This module provides the SegmentoDirectioner class, a modification to EncoderDec
 adopts it to perform both segmentation and direction estimation tasks simultaneously.
 """
 
-from typing import Optional
+from dataclasses import dataclass
+from typing import Iterable
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import Tensor
@@ -22,6 +22,33 @@ from mmseg.utils import (
 )
 
 from .directioner import Directioner
+
+
+@dataclass(frozen=True)
+class CropWindow:
+    """CropWindow class."""
+    y1: int
+    x1: int
+    y2: int
+    x2: int
+
+    def slices(self):
+        """Return (y_slice, x_slice) ready for 4D tensor indexing."""
+        return slice(self.y1, self.y2), slice(self.x1, self.x2)
+
+    def x_slice(self):
+        return slice(self.x1, self.x2)
+
+    def y_slice(self):
+        return slice(self.y1, self.y2)
+
+    @property
+    def height(self) -> int:
+        return self.y2 - self.y1
+
+    @property
+    def width(self) -> int:
+        return self.x2 - self.x1
 
 
 @MODELS.register_module()
@@ -130,6 +157,22 @@ class SegmentoDirectioner(Directioner):
 
         return data_samples
 
+    def _iter_crop_windows(self, h_img: int, w_img: int) -> Iterable[CropWindow]:
+        """Yield CropWindow for each sliding-window position."""
+        h_stride, w_stride = self.test_cfg.stride
+        h_crop, w_crop = self.test_cfg.crop_size
+        h_grids = max(h_img - h_crop + h_stride - 1, 0) // h_stride + 1
+        w_grids = max(w_img - w_crop + w_stride - 1, 0) // w_stride + 1
+        for h_idx in range(h_grids):
+            for w_idx in range(w_grids):
+                y1 = h_idx * h_stride
+                x1 = w_idx * w_stride
+                y2 = min(y1 + h_crop, h_img)
+                x2 = min(x1 + w_crop, w_img)
+                y1 = max(y2 - h_crop, 0)
+                x1 = max(x2 - w_crop, 0)
+                yield CropWindow(y1, x1, y2, x2)
+
     def slide_inference(self, inputs: Tensor, batch_img_metas: list[dict]) -> tuple[Tensor, Tensor]:
         """Inference by sliding-window with overlap.
 
@@ -148,42 +191,32 @@ class SegmentoDirectioner(Directioner):
         Returns:
             tuple[Tensor, Tensor]: The segmentation and direction results for each input image.
         """
-
-        h_stride, w_stride = self.test_cfg.stride
-        h_crop, w_crop = self.test_cfg.crop_size
         batch_size, _, h_img, w_img = inputs.size()
         out_seg_channels = self.out_channels
         out_dir_channels = self.out_dir_channels
-        h_grids = max(h_img - h_crop + h_stride - 1, 0) // h_stride + 1
-        w_grids = max(w_img - w_crop + w_stride - 1, 0) // w_stride + 1
         seg_preds = inputs.new_zeros((batch_size, out_seg_channels, h_img, w_img))
         dir_preds = inputs.new_zeros((batch_size, out_dir_channels, h_img, w_img))
         count_mat = inputs.new_zeros((batch_size, 1, h_img, w_img))
-        for h_idx in range(h_grids):
-            for w_idx in range(w_grids):
-                y1 = h_idx * h_stride
-                x1 = w_idx * w_stride
-                y2 = min(y1 + h_crop, h_img)
-                x2 = min(x1 + w_crop, w_img)
-                y1 = max(y2 - h_crop, 0)
-                x1 = max(x2 - w_crop, 0)
-                crop_img = inputs[:, :, y1:y2, x1:x2]
-                # change the image shape to patch shape
-                batch_img_metas[0]["img_shape"] = crop_img.shape[2:]
-                # the output of encode_decode is seg logits tensor map
-                # with shape [N, C, H, W]
-                crop_seg_logit, crop_dir_vectors = self.encode_decode(crop_img, batch_img_metas)
-                seg_preds += F.pad(
-                    crop_seg_logit,
-                    (int(x1), int(seg_preds.shape[3] - x2), int(y1), int(seg_preds.shape[2] - y2)),
-                )
-                dir_preds += F.pad(
-                    crop_dir_vectors,
-                    (int(x1), int(dir_preds.shape[3] - x2), int(y1), int(dir_preds.shape[2] - y2)),
-                )
 
-                count_mat[:, :, y1:y2, x1:x2] += 1
-        assert (count_mat == 0).sum() == 0
+        with torch.inference_mode():
+            for window in self._iter_crop_windows(h_img, w_img):
+                y_slice, x_slice = window.slices()
+                crop_img = inputs[:, :, y_slice, x_slice]
+                crop_metas = [
+                    {**m, "img_shape": (window.height, window.width)} for m in batch_img_metas
+                ]
+
+                crop_seg_logit, crop_dir_vectors = self.encode_decode(crop_img, crop_metas)
+                seg_preds[:, :, y_slice, x_slice] += crop_seg_logit
+                dir_preds[:, :, y_slice, x_slice] += crop_dir_vectors
+                count_mat[:, :, y_slice, x_slice] += 1
+
+        zero_covered = int((count_mat == 0).sum().item())
+        if zero_covered > 0:
+            raise RuntimeError(
+                f"Found {zero_covered} pixels with zero coverage in sliding-window inference."
+            )
+
         seg_logits = seg_preds / count_mat
         dir_vector_field = dir_preds / count_mat
 
