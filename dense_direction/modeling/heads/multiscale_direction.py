@@ -6,7 +6,7 @@ direction head and any number of "dummy" direction heads. The "real" head perfor
 direction heads, while the "dummy" heads enable loss computation with different gt_scale_factor
 values.
 """
-
+import copy
 from typing import Sequence
 
 from torch import Tensor
@@ -69,12 +69,14 @@ class MultiscaleLossDirectionHead(nn.Module):
         heads: list[nn.Module] = []
         if isinstance(dummy_heads, list):
             for dummy_config in dummy_heads:
-                dummy_config = base_config.merge(dummy_config)
-                dummy_head = MODELS.build(dummy_config)
+                config = copy.deepcopy(base_config)
+                config.merge(dummy_config)
+                dummy_head = MODELS.build(config)
                 heads.append(dummy_head)
         else:
-            dummy_config = base_config.merge(dummy_heads)
-            dummy_head = MODELS.build(dummy_config)
+            config = copy.deepcopy(base_config)
+            config.merge(dummy_heads)
+            dummy_head = MODELS.build(config)
             heads.append(dummy_head)
 
         self.dummy_heads: nn.ModuleList = nn.ModuleList(heads)
