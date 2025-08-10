@@ -4,6 +4,7 @@ _base_ = [
 model = dict(
     backbone=dict(
         layers_to_extract=1,
+        return_class_token=False,
     ),
     decode_head=dict(
         type="DualDecodeHead",
