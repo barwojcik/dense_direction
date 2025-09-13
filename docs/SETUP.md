@@ -42,7 +42,7 @@
 
 1.  **Prerequisites**: Ensure Docker is installed and running on your system.
 2.  **Build the Docker Image**:
-    Navigate to the root directory of your project (where `Dockerfile` and `requirements.txt` are located) and build the Docker image. Replace `my-project-image` with a name of your choice.
+    Navigate to the root directory of your project (where `Dockerfile` and `requirements.txt` are located) and build the Docker image.
     ```bash
     docker build -t dense-direction .
     ```
