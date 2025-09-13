@@ -29,5 +29,5 @@ The plot shows a colored overlay that encodes the estimated per‑pixel directio
 - This convention is common for undirected linear structures; it avoids ambiguity between opposite directions along the same line.
 
 #### Why this is useful:
-- Enables downstream tasks that need local direction, such as anisotropic filtering, vectorization/tracing, topology analysis, path following, and measuring directional consistency or curvature along linear objects.
+- Enables downstream tasks that need local direction, such as topology analysis, path following, and measuring directional consistency or curvature along linear objects.
 - Complements semantic segmentation by adding geometric context (direction) without requiring explicit direction labels.
