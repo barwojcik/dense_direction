@@ -17,10 +17,12 @@ It is a dense task that estimates the local direction for every pixel belonging 
 
 #### Example output:
 
-The plot shows a colored overlay that encodes the estimated per‑pixel direction for pixels classified as `concrete crack`.
+The plots show a colored overlay that encodes the estimated per‑pixel direction for pixels classified as `concrete crack`, `blood vessel`, and `road` in the example image.
 
 <p align="center">
-  <img src="./docs/ims/example_output.png" alt="Output plot">
+  <img src="docs/ims/example_output_crack.png" alt="Output plot, crack">
+  <img src="docs/ims/example_output_chase.png" alt="Output plot, blood vessel">
+  <img src="docs/ims/example_output_ottawa.png" alt="Output plot, road">
 </p>
 
 #### Angle convention and range:
