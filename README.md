@@ -17,7 +17,7 @@ It is a dense task that estimates the local direction for every pixel belonging 
 
 #### Example output:
 
-The plots show a colored overlay that encodes the estimated per‑pixel direction for pixels classified as `concrete crack`, `blood vessel`, and `road` in the example image.
+The plots show a colored overlay that encodes the estimated per‑pixel direction for pixels classified as `concrete crack`, `blood vessel`, and `road` in the example images from `Concrete-Cracks`, `CHASE DB1` and `Ottawa-Roads` datasets.
 
 <p align="center">
   <img src="docs/ims/example_output_crack.png" alt="Output plot, crack">
