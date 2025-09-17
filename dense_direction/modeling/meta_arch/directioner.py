@@ -170,7 +170,7 @@ class Directioner(EncoderDecoder):
             padding = data_sample.metainfo["padding_size"]
             prediction = self._remove_padding(prediction, padding)
 
-        if "filp" in data_sample.metainfo:
+        if "flip" in data_sample.metainfo:
             flip = data_sample.metainfo["flip"]
             prediction = self._unflip(prediction, flip)
 
