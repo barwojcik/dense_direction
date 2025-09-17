@@ -111,7 +111,7 @@ class SegmentoDirectioner(Directioner):
                 - ``dir_classes``(list): A list of direction classes.
         """
         if data_samples is None:
-            data_samples = [SegDataSample() for _ in range(seg_logits)]
+            data_samples = [SegDataSample() for _ in seg_logits]
 
         for seg_logit, data_sample in zip(seg_logits, data_samples):
             seg_logit = self._transform_prediction(seg_logit, data_sample)

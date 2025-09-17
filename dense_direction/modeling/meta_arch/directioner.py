@@ -132,7 +132,7 @@ class Directioner(EncoderDecoder):
         return prediction[:, padding_top: h - padding_bottom, padding_left: w - padding_right]
 
     @staticmethod
-    def _unflip(prediction: Tensor, flip_type: str) -> Tensor:
+    def _unflip(prediction: Tensor, flip_type: str | None) -> Tensor:
         """
         Flips a given prediction tensor along a specified axis.
 
@@ -170,9 +170,9 @@ class Directioner(EncoderDecoder):
             padding = data_sample.metainfo["padding_size"]
             prediction = self._remove_padding(prediction, padding)
 
-        if "flip" in data_sample.metainfo:
-            flip = data_sample.metainfo["flip"]
-            prediction = self._unflip(prediction, flip)
+        if data_sample.metainfo.get("flip", False):
+            flip_type = data_sample.metainfo.get("flip_direction", None)
+            prediction = self._unflip(prediction, flip_type)
 
         if "img_shape" in data_sample.metainfo:
             image_size = data_sample.metainfo["img_shape"]
@@ -207,7 +207,7 @@ class Directioner(EncoderDecoder):
                - ``dir_classes``(list): A list of direction classes.
         """
         if data_samples is None:
-            data_samples = [SegDataSample() for _ in range(vector_fields)]
+            data_samples = [SegDataSample() for _ in vector_fields]
 
         for vector_field, data_sample in zip(vector_fields, data_samples):
             vector_field = self._transform_prediction(vector_field, data_sample)
