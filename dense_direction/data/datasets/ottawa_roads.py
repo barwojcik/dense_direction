@@ -78,8 +78,8 @@ class OttawaRoadsDataset(BaseSegDataset):
         if phase is not None and phase in self.SPLITS.keys():
             parameters["indices"] = self.SPLITS[phase]
 
-        kwargs.update(parameters)
+        parameters.update(kwargs)
         super().__init__(
             data_root=data_root,
-            **kwargs,
+            **parameters,
         )
