@@ -1,5 +1,5 @@
 """
-DirectionMetric metric.
+CenterlineDirectionMetric metric.
 
 This module provides a DirectionMetric class that calculates angular error metrics in evaluation.
 """
@@ -19,9 +19,9 @@ from prettytable import PrettyTable
 
 
 @METRICS.register_module()
-class DirectionMetric(BaseMetric):
+class CenterlineDirectionMetric(BaseMetric):
     """
-    DirectionMetric class.
+    CenterlineDirectionMetric class.
 
     This class calculates angular error metrics for direction estimation during evaluation.
 
@@ -49,7 +49,7 @@ class DirectionMetric(BaseMetric):
         **kwargs
     ) -> None:
         """
-        Initializes the DirectionMetric class.
+        Initializes the CenterlineDirectionMetric class.
 
         Args:
             gt_dir_key (str): Key for ground truth directions in data_samples.
