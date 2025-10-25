@@ -127,6 +127,7 @@ class DirectionMetric(BaseMetric):
         std_error: float = float(np.std(errors))
         rmse: float = float(np.sqrt(np.mean(errors ** 2)))
 
+        acc_1: float = float((errors <= 1).mean() * 100)
         acc_5: float = float((errors <= 5).mean() * 100)
         acc_10: float = float((errors <= 10).mean() * 100)
         acc_20: float = float((errors <= 20).mean() * 100)
@@ -136,6 +137,7 @@ class DirectionMetric(BaseMetric):
             "median_error": median_error,
             "std_error": std_error,
             "rmse": rmse,
+            "acc_1_deg": acc_1,
             "acc_5_deg": acc_5,
             "acc_10_deg": acc_10,
             "acc_20_deg": acc_20,
@@ -148,6 +150,6 @@ class DirectionMetric(BaseMetric):
         for k, v in metrics.items():
             results_table.add_row([k, f"{v:.2f}" if isinstance(v, float) else v])
 
-        print_log("direction eval results:\n" + results_table.get_string(), logger=logger)
+        print_log("Direction eval results table:\n" + results_table.get_string(), logger=logger)
 
         return metrics
