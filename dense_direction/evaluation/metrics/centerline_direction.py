@@ -27,6 +27,8 @@ class CenterlineDirectionMetric(BaseMetric):
     Args:
         gt_dir_key (str): Key for ground truth directions in data_samples.
             Default: 'gt_directions'.
+        acc_thresholds (Sequence[float]): Thresholds for calculating accuracy metrics.
+            Default: (1, 5, 10, 20).
         collect_device (str): Device name used for collecting results from different ranks
             during distributed training. Must be 'cpu' or 'gpu'. Defaults to 'cpu'.
         prefix (str, optional): The prefix that will be added in the metric names to
@@ -38,10 +40,12 @@ class CenterlineDirectionMetric(BaseMetric):
     """
 
     default_prefix: str = "dir_eval"
+    _DEFAULT_ACC_THRSH: tuple[float,...] = (1, 5, 10, 20)
 
     def __init__(
         self,
         gt_dir_key: str = "gt_directions",
+        acc_thresholds: Optional[Sequence[float]] = None,
         collect_device: str = "cpu",
         prefix: Optional[str] = None,
         collect_dir: Optional[str] = None,
@@ -53,6 +57,8 @@ class CenterlineDirectionMetric(BaseMetric):
         Args:
             gt_dir_key (str): Key for ground truth directions in data_samples.
                 Default: 'gt_directions'.
+            acc_thresholds (Sequence[float]): Thresholds for calculating accuracy metrics.
+                Default: (1, 5, 10, 20).
             collect_device (str): Device name used for collecting results from different ranks
                 during distributed training. Must be 'cpu' or 'gpu'. Defaults to 'cpu'.
             prefix (str, optional): The prefix that will be added in the metric names to
@@ -68,6 +74,7 @@ class CenterlineDirectionMetric(BaseMetric):
             collect_dir=collect_dir,
         )
         self.gt_dir_key: str = gt_dir_key
+        self.acc_thresholds: Sequence[float] = acc_thresholds or self._DEFAULT_ACC_THRSH
 
     def process(self, data_batch: Any, data_samples: Sequence[dict]) -> None:
         """
@@ -122,8 +129,7 @@ class CenterlineDirectionMetric(BaseMetric):
                 aggregated_results[dir_class].append(errors)
         return {dir_class: np.concatenate(errors) for dir_class, errors in aggregated_results.items()}
 
-    @staticmethod
-    def _compute_metrics(errors: np.ndarray) -> Dict[str, float | int]:
+    def _compute_metrics(self, errors: np.ndarray) -> Dict[str, float | int]:
         """Compute metrics from errors."""
         n: int = errors.size
         mean_error: float = float(errors.mean())
@@ -131,20 +137,17 @@ class CenterlineDirectionMetric(BaseMetric):
         std_error: float = float(np.std(errors))
         rmse: float = float(np.sqrt(np.mean(errors ** 2)))
 
-        acc_1: float = float((errors <= 1).mean() * 100)
-        acc_5: float = float((errors <= 5).mean() * 100)
-        acc_10: float = float((errors <= 10).mean() * 100)
-        acc_20: float = float((errors <= 20).mean() * 100)
+        accs = {
+            f"acc_{acc_thr:.1f}_deg": float((errors <= acc_thr).mean() * 100)
+            for acc_thr in self.acc_thresholds
+        }
 
         return {
             "mean_error": mean_error,
             "median_error": median_error,
             "std_error": std_error,
             "rmse": rmse,
-            "acc_1_deg": acc_1,
-            "acc_5_deg": acc_5,
-            "acc_10_deg": acc_10,
-            "acc_20_deg": acc_20,
+            **accs,
             "num_pixels": n,
         }
 
