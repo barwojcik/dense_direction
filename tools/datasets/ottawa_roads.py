@@ -48,6 +48,11 @@ def main():
             mask_info.filename = f"Ottawa-Dataset/masks/Ottawa-{idx}.png"
             print(zip_data.extract(mask_info, path=output_dir))
 
+            centerline_path: str = f"Ottawa-Dataset/{idx}/centerline.png"
+            centerline_info: ZipInfo = zip_data.getinfo(centerline_path)
+            centerline_info.filename = f"Ottawa-Dataset/centerline/Ottawa-{idx}.png"
+            print(zip_data.extract(centerline_info, path=output_dir))
+
 
 if __name__ == "__main__":
     main()

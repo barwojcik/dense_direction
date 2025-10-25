@@ -68,6 +68,11 @@ python ../tools/datasets/ottawa_roads.py --zip_path ./Ottawa-Dataset.zip --outpu
 ```
 └── data
     └── Ottawa-Dataset
+        ├── centerline
+        │   ├── Ottawa-1.png
+        │   ├── Ottawa-2.png
+        │   ├── ...
+        │   └── Ottawa-20.png
         ├── images
         │   ├── Ottawa-1.tif
         │   ├── Ottawa-2.tif
