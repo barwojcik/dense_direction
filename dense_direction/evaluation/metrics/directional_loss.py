@@ -143,3 +143,4 @@ class DirectionalLossMetric(BaseMetric):
                     y = y + self.step
 
                 x = x + self.step
+                y = 0
