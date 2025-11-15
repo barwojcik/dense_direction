@@ -105,7 +105,7 @@ class CenterlineDirectionMetric(BaseMetric):
             pred_vals: torch.Tensor = pred_dir[mask]
 
             diff: torch.Tensor = torch.abs(gt_vals - pred_vals)
-            errors: torch.Tensor = torch.min(diff, torch.pi - diff)
+            errors: torch.Tensor = torch.minimum(diff, torch.pi - diff)
             errors_deg: torch.Tensor = torch.rad2deg(errors)
 
             channel_labels: torch.Tensor = torch.as_tensor(dir_classes).to(pred_dir.device)
