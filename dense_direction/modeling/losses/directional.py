@@ -89,7 +89,7 @@ class DirectionalLoss(nn.Module):
         self.norm_order: int | str = norm_order
         self.mask_patches: bool = mask_patches
         self.patch_thr: float = patch_thr
-        kernel_cfg: ConfigType = kernel_cfg.copy() or self.DEFAULT_KERNEL_CFG
+        kernel_cfg: ConfigType = (kernel_cfg or self.DEFAULT_KERNEL_CFG).copy()
         self.kernel_fn: Callable = FUNCTIONS.get(kernel_cfg.pop("type"))
         self.kernel_cfg: ConfigType = kernel_cfg
         self.reduction: str = reduction.lower()
