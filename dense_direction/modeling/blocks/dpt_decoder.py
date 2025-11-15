@@ -96,7 +96,7 @@ class DPTDecoderBlock(BaseModule):
         )
 
         self.post_process_channels = [
-            channel * math.pow(2, i) if expand_channels else channel
+            channel * 2**i if expand_channels else channel
             for i, channel in enumerate(post_process_channels)
         ]
         self.convs = nn.ModuleList()
