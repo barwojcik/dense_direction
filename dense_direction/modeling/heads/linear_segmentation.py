@@ -41,7 +41,7 @@ class LinearHead(BaseDecodeHead):
 
     def layers(self, inputs: Sequence[Tensor]) -> Tensor:
         """
-        Forward pass through the linear deocde head layers.
+        Forward pass through the linear decode head layers.
 
         This method transforms inputs and passes them through the optional normalization layer.
 
@@ -65,7 +65,7 @@ class LinearHead(BaseDecodeHead):
             inputs (Sequence[Tensor]): Input tensors of shape (N, C, H, W).
 
         Returns:
-            outputs (Tensor): Output tensor with clas logits.
+            outputs (Tensor): Output tensor with classlogits.
         """
         features: Tensor = self.layers(inputs)
         outputs: Tensor = self.cls_seg(features)

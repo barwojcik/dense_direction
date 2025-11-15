@@ -88,7 +88,7 @@ class DPTDirectionHead(BaseDirectionDecodeHead):
 
     def layers(self, inputs: list[Tensor]) -> Tensor:
         """
-        Forward pass through the DPT deocde head layers.
+        Forward pass through the DPT decode head layers.
 
         This method transforms inputs and passes them through head's layers.
 

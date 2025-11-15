@@ -42,7 +42,7 @@ class LinearDirectionHead(BaseDirectionDecodeHead):
 
     def layers(self, inputs: Sequence[Tensor]) -> Tensor:
         """
-        Forward pass through the linear deocde head layers.
+        Forward pass through the linear decode head layers.
 
         This method transforms inputs and passes them through the optional normalization layer.
 
