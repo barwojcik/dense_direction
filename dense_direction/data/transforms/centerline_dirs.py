@@ -73,9 +73,7 @@ class CenterlineToDirections(BaseTransform):
         ), "Missing segmentation map key in results, load annotations first"
         gt_semantic_seg: np.ndarray = results["gt_seg_map"].copy().astype(np.float32)
 
-        assert (
-            len(gt_semantic_seg.shape) >= 2 or len(gt_semantic_seg.shape) < 4
-        ), "Segmentation map should be 2D or 3D"
+        assert (2 <= len(gt_semantic_seg.shape) < 4), "Segmentation map should be 2D or 3D"
 
         class_directions: list[np.ndarray] = []
         for class_idx in self.dir_classes:
