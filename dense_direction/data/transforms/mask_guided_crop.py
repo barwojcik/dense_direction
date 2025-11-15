@@ -130,6 +130,8 @@ class MaskGuidedRandomCrop(BaseTransform):
             mask_roi = np.where(mask_roi == self.by_index, 1, 0)
 
         location_candidates: list[tuple[int, int]] = list(zip(*np.where(mask_roi > 0)))
+        assert location_candidates, "No positive class found in the mask"
+
         crop_location: tuple[int, int] = random.choice(location_candidates)
 
         if self.min_ratio == 0.0 and self.max_ratio == 1.0:
