@@ -27,7 +27,7 @@ class Dino3TorchHub(BaseModule):
     loaded and used as a backbone.
 
     Args:
-        repo_directory (str): Directory where the repository is cloned.
+        repo_url (str): Directory where the repository is cloned.
         weights_path (str): Path to the weights file.
         model_size (str): The size of the model to be used. It can be one of: 'small',
             'small_plus', 'baseline', 'large', 'huge_plus', 'full'.
@@ -52,11 +52,12 @@ class Dino3TorchHub(BaseModule):
         huge_plus='dinov3_vith16plus',
         full='dinov3_vit7b16',
     )
+    _DEFAULT_REPO_URL: str = "facebookresearch/dinov3"
 
     def __init__(
         self,
-        repo_directory: str,
         weights_path: str,
+        repo_url: str | None = None,
         model_size: str = "small",
         return_intermediate_layers: bool = True,
         layers_to_extract: int | Sequence[int] = 1,
@@ -70,8 +71,9 @@ class Dino3TorchHub(BaseModule):
         Initializes the Dinov3 model from PyTorch Hub.
 
         Args:
-            repo_directory (str): Directory where the repository is cloned.
-            weights_path (str): Path to the weights file.
+            weights_path (str): Path to the weight .pt file.
+            repo_url (str | None): Optional link to the git repository, when not provided, it
+                defaults to `facebookresearch/dinov3`. Default None.
             model_size (str): The size of the model to be used. It can be one of: 'small',
                 'small_plus', 'baseline', 'large', 'huge_plus', 'full'.
             return_intermediate_layers (bool): Whether to return intermediate layers.
@@ -92,19 +94,17 @@ class Dino3TorchHub(BaseModule):
         assert (
             model_size in self.MODEL_NAMES.keys()
         ), f"Model size should be one of {self.MODEL_NAMES.keys()}"
-        assert repo_directory is not None, "Please provide a valid repo directory"
         assert weights_path is not None, "Please provide a valid weights path"
-        assert Path(repo_directory).exists(), "Repository directory does not exist"
         assert Path(weights_path).exists(), "Weights path does not exist"
 
         model_name = self.MODEL_NAMES[model_size]
 
         self.layers: nn.Module = torch.hub.load(
-            repo_directory,
+            repo_url or self._DEFAULT_REPO_URL,
             model_name,
-            local=True,
-            weights=weights_path,
+            pretrained=False,
         )
+        self.layers.load_state_dict(torch.load(weights_path, weights_only=False), strict=False)
         self.return_intermediate_layers: bool = return_intermediate_layers
         self.layers_to_extract: int | Sequence[int] = layers_to_extract
         self.reshape_output: bool = reshape_output
