@@ -45,7 +45,7 @@ class ConcreteCracksDataset(BaseSegDataset):
         reduce_zero_label=False,
         data_prefix=dict(img_path="rgb", seg_map_path="BW"),
     )
-    SPLITS: dict[str, int] = dict(
+    SPLITS: dict[str, Any] = dict(
         train=278,
         val=[i for i in range(278, 368)],
         test=[i for i in range(368, 458)],
