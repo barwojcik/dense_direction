@@ -48,16 +48,16 @@ class PackCustomInputs(BaseTransform):
             'pad_shape', 'scale_factor', 'flip', 'flip_direction')``
     """
 
-    DEFAULT_META_KEYS: tuple[str,...] = (
-        'img_path',
-        'seg_map_path',
-        'ori_shape',
-        'img_shape',
-        'pad_shape',
-        'scale_factor',
-        'flip',
-        'flip_direction',
-        'reduce_zero_label',
+    DEFAULT_META_KEYS: tuple[str, ...] = (
+        "img_path",
+        "seg_map_path",
+        "ori_shape",
+        "img_shape",
+        "pad_shape",
+        "scale_factor",
+        "flip",
+        "flip_direction",
+        "reduce_zero_label",
     )
 
     def __init__(
@@ -97,8 +97,8 @@ class PackCustomInputs(BaseTransform):
                 ground truth segmentation map and additional data from `data_keys`.
         """
         packed_results: dict[Any, Any] = dict()
-        if 'img' in results:
-            img = results['img']
+        if "img" in results:
+            img = results["img"]
             if len(img.shape) < 3:
                 img = np.expand_dims(img, -1)
             if not img.flags.c_contiguous:
@@ -106,18 +106,20 @@ class PackCustomInputs(BaseTransform):
             else:
                 img = img.transpose(2, 0, 1)
                 img = to_tensor(img).contiguous()
-            packed_results['inputs'] = img
+            packed_results["inputs"] = img
 
         data_sample = SegDataSample()
-        if 'gt_seg_map' in results:
-            if len(results['gt_seg_map'].shape) == 2:
-                data = to_tensor(results['gt_seg_map'][None, ...].astype(np.int64))
+        if "gt_seg_map" in results:
+            if len(results["gt_seg_map"].shape) == 2:
+                data = to_tensor(results["gt_seg_map"][None, ...].astype(np.int64))
             else:
-                warnings.warn('Please pay attention your ground truth '
-                              'segmentation map, usually the segmentation '
-                              'map is 2D, but got '
-                              f'{results["gt_seg_map"].shape}')
-                data = to_tensor(results['gt_seg_map'].astype(np.int64))
+                warnings.warn(
+                    "Please pay attention your ground truth "
+                    "segmentation map, usually the segmentation "
+                    "map is 2D, but got "
+                    f'{results["gt_seg_map"].shape}'
+                )
+                data = to_tensor(results["gt_seg_map"].astype(np.int64))
             gt_sem_seg_data = dict(data=data)
             data_sample.gt_sem_seg = PixelData(**gt_sem_seg_data)
 
@@ -127,13 +129,13 @@ class PackCustomInputs(BaseTransform):
                 continue
 
             data = dict(data=to_tensor(results[data_key]))
-            data_sample.set_data({data_key:PixelData(**data)})
+            data_sample.set_data({data_key: PixelData(**data)})
 
         img_meta = {}
         for key in self.meta_keys:
             if key in results:
                 img_meta[key] = results[key]
         data_sample.set_metainfo(img_meta)
-        packed_results['data_samples'] = data_sample
+        packed_results["data_samples"] = data_sample
 
         return packed_results

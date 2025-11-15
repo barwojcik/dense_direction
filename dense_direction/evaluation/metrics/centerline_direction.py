@@ -3,6 +3,7 @@ CenterlineDirectionMetric metric.
 
 This module provides a DirectionMetric class that calculates angular error metrics in evaluation.
 """
+
 from collections import defaultdict
 from typing import Any, Sequence, Optional, List, Dict
 
@@ -40,7 +41,7 @@ class CenterlineDirectionMetric(BaseMetric):
     """
 
     default_prefix: str = "dir_eval"
-    _DEFAULT_ACC_THRSH: tuple[float,...] = (1, 5, 10, 20)
+    _DEFAULT_ACC_THRSH: tuple[float, ...] = (1, 5, 10, 20)
 
     def __init__(
         self,
@@ -49,7 +50,7 @@ class CenterlineDirectionMetric(BaseMetric):
         collect_device: str = "cpu",
         prefix: Optional[str] = None,
         collect_dir: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Initializes the CenterlineDirectionMetric class.
@@ -90,7 +91,7 @@ class CenterlineDirectionMetric(BaseMetric):
         for data_sample in data_samples:
             dir_classes: list[int] = data_sample["dir_classes"]
             pred_dir: torch.Tensor = data_sample["estimated_dirs"]["data"]
-            gt_centerline: torch.Tensor= data_sample["gt_sem_seg"]["data"]
+            gt_centerline: torch.Tensor = data_sample["gt_sem_seg"]["data"]
             class_centerline: torch.Tensor = torch.cat(
                 [(gt_centerline == dir_class) for dir_class in dir_classes]
             )
@@ -114,7 +115,7 @@ class CenterlineDirectionMetric(BaseMetric):
 
             errors_labels: torch.Tensor = label_map[mask]
             errors_dict: dict[int, np.ndarray] = {
-                dir_class: errors_deg[errors_labels==dir_class].cpu().numpy()
+                dir_class: errors_deg[errors_labels == dir_class].cpu().numpy()
                 for dir_class in dir_classes
             }
 
@@ -127,7 +128,9 @@ class CenterlineDirectionMetric(BaseMetric):
         for result in results:
             for dir_class, errors in result.items():
                 aggregated_results[dir_class].append(errors)
-        return {dir_class: np.concatenate(errors) for dir_class, errors in aggregated_results.items()}
+        return {
+            dir_class: np.concatenate(errors) for dir_class, errors in aggregated_results.items()
+        }
 
     def _compute_metrics(self, errors: np.ndarray) -> Dict[str, float | int]:
         """Compute metrics from errors."""
@@ -135,7 +138,7 @@ class CenterlineDirectionMetric(BaseMetric):
         mean_error: float = float(errors.mean())
         median_error: float = float(np.median(errors))
         std_error: float = float(np.std(errors))
-        rmse: float = float(np.sqrt(np.mean(errors ** 2)))
+        rmse: float = float(np.sqrt(np.mean(errors**2)))
 
         accs = {
             f"acc_{acc_thr:.1f}_deg": float((errors <= acc_thr).mean() * 100)
@@ -172,20 +175,32 @@ class CenterlineDirectionMetric(BaseMetric):
         overall_metrics: Dict[str, float] = self._compute_metrics(errors)
 
         results_table: PrettyTable = PrettyTable()
-        results_table.field_names = ["Classes", ] + [k for k in overall_metrics.keys()]
-        results_table.add_row([
-            "Overall", *[f"{v:.2f}" if isinstance(v, float) else v for v in overall_metrics.values()]
-        ])
+        results_table.field_names = [
+            "Classes",
+        ] + [k for k in overall_metrics.keys()]
+        results_table.add_row(
+            [
+                "Overall",
+                *[f"{v:.2f}" if isinstance(v, float) else v for v in overall_metrics.values()],
+            ]
+        )
 
         if len(aggregated_results) > 1:
             for dir_class, errors in aggregated_results.items():
                 class_metrics: Dict[str, float] = self._compute_metrics(errors)
 
-                results_table.add_row([
-                    f"Class {dir_class}",
-                    *[f"{v:.2f}" if isinstance(v, float) else v for v in class_metrics.values()],
-                ])
+                results_table.add_row(
+                    [
+                        f"Class {dir_class}",
+                        *[
+                            f"{v:.2f}" if isinstance(v, float) else v
+                            for v in class_metrics.values()
+                        ],
+                    ]
+                )
 
-        print_log("Centerline direction eval results table:\n" + results_table.get_string(), logger=logger)
+        print_log(
+            "Centerline direction eval results table:\n" + results_table.get_string(), logger=logger
+        )
 
         return overall_metrics

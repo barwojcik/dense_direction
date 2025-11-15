@@ -26,6 +26,7 @@ from .directioner import Directioner
 @dataclass(frozen=True)
 class CropWindow:
     """CropWindow class."""
+
     y1: int
     x1: int
     y2: int

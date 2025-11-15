@@ -145,11 +145,11 @@ class SegDirLocalVisualizer(SegLocalVisualizer):
         if "gt_sem_seg" in data_sample and "dir_classes" in data_sample:
             gt_sem_seg: np.ndarray = data_sample.gt_sem_seg.cpu().data.numpy()
             masks: list[np.ndarray] = [
-                np.where(gt_sem_seg==class_idx, 1, 0) for class_idx in data_sample.dir_classes
+                np.where(gt_sem_seg == class_idx, 1, 0) for class_idx in data_sample.dir_classes
             ]
-            masks = [np.concatenate(3*[mask.transpose(1, 2, 0)], axis=-1) for mask in masks]
+            masks = [np.concatenate(3 * [mask.transpose(1, 2, 0)], axis=-1) for mask in masks]
             dir_maps = [
-                np.where(mask==0, image, dir_map) for mask, dir_map in zip(masks, dir_maps)
+                np.where(mask == 0, image, dir_map) for mask, dir_map in zip(masks, dir_maps)
             ]
 
         out_map: np.ndarray = np.concatenate(dir_maps, axis=1)

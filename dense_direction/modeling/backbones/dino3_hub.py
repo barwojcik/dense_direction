@@ -4,6 +4,7 @@ Dinov3 model wrapper for PyTorch Hub.
 This module provides a wrapper for the Dinov3 model from PyTorch Hub, that can be loaded and used
 as a backbone.
 """
+
 from pathlib import Path
 from typing import Sequence
 
@@ -45,12 +46,12 @@ class Dino3TorchHub(BaseModule):
     """
 
     MODEL_NAMES: dict[str, str] = dict(
-        small='dinov3_vits16',
-        small_plus='dinov3_vits16plus',
-        baseline='dinov3_vitb16',
-        large='dinov3_vitl16',
-        huge_plus='dinov3_vith16plus',
-        full='dinov3_vit7b16',
+        small="dinov3_vits16",
+        small_plus="dinov3_vits16plus",
+        baseline="dinov3_vitb16",
+        large="dinov3_vitl16",
+        huge_plus="dinov3_vith16plus",
+        full="dinov3_vit7b16",
     )
     _DEFAULT_REPO_URL: str = "facebookresearch/dinov3"
 

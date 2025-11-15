@@ -75,7 +75,7 @@ class EfficientDirectionalLoss(nn.Module):
             patch_thr (float, optional): Threshold for patch masking. Default: 0.8.
             kernel_cfg (ConfigType, optional): Kernel configuration.
                 Default: 'dict(type="circular_point_kernel")'.
-            reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'. 
+            reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'.
                 Default: 'mean'.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".

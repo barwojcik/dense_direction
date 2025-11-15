@@ -49,7 +49,7 @@ class BinarizeAnnotations(BaseTransform):
         ), "Missing segmentation map key in results, load annotations first"
         gt_semantic_seg = results["gt_seg_map"]
 
-        assert (2 <= len(gt_semantic_seg.shape) < 4), "Segmentation map should be 2D or 3D"
+        assert 2 <= len(gt_semantic_seg.shape) < 4, "Segmentation map should be 2D or 3D"
 
         # normalize values
         if len(gt_semantic_seg.shape) == 2:
