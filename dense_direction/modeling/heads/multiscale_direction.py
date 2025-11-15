@@ -6,6 +6,7 @@ direction head and any number of "dummy" direction heads. The "real" head perfor
 direction heads, while the "dummy" heads enable loss computation with different gt_scale_factor
 values.
 """
+
 import copy
 from typing import Sequence
 
@@ -127,7 +128,7 @@ class MultiscaleLossDirectionHead(nn.Module):
         return losses
 
     def predict(
-            self, inputs: tuple[Tensor], batch_img_metas: list[dict], test_cfg: ConfigType
+        self, inputs: tuple[Tensor], batch_img_metas: list[dict], test_cfg: ConfigType
     ) -> Tensor:
         """
         Forward function for prediction.

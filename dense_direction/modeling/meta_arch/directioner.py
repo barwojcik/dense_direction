@@ -129,7 +129,7 @@ class Directioner(EncoderDecoder):
         padding_left, padding_right, padding_top, padding_bottom = padding
         _, h, w = prediction.shape
 
-        return prediction[:, padding_top: h - padding_bottom, padding_left: w - padding_right]
+        return prediction[:, padding_top : h - padding_bottom, padding_left : w - padding_right]
 
     @staticmethod
     def _unflip(prediction: Tensor, flip_type: str | None) -> Tensor:

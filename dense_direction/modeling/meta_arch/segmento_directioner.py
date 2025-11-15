@@ -26,6 +26,7 @@ from .directioner import Directioner
 @dataclass(frozen=True)
 class CropWindow:
     """CropWindow class."""
+
     y1: int
     x1: int
     y2: int
@@ -81,9 +82,7 @@ class SegmentoDirectioner(Directioner):
         self.out_dir_channels = 2 * len(self.decode_head.dir_classes)
 
     def _get_seg_pred(self, seg_logit: Tensor) -> Tensor:
-        """
-
-        """
+        """Returns class from class logits."""
         if seg_logit.shape[0] == 1:
             seg_logit = seg_logit.sigmoid()
             return (seg_logit > self.decode_head.threshold).to(seg_logit)

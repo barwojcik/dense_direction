@@ -73,7 +73,7 @@ class DirectionalLoss(nn.Module):
             patch_thr (float, optional): Threshold for patch masking. Default: 0.8
             kernel_cfg (ConfigType, optional): Kernel configuration.
                 Default: 'dict(type="circular_point_kernel")'.
-            reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'. 
+            reduction (str, optional): Loss reduction method, available 'mean', 'sum', 'none'.
                 Default: 'mean'.
             loss_weight (float, optional): Loss weight. Default: 1.0.
             loss_name (str, optional): Name of the loss. Default: "loss_dir".
@@ -89,7 +89,7 @@ class DirectionalLoss(nn.Module):
         self.norm_order: int | str = norm_order
         self.mask_patches: bool = mask_patches
         self.patch_thr: float = patch_thr
-        kernel_cfg: ConfigType = kernel_cfg.copy() or self.DEFAULT_KERNEL_CFG
+        kernel_cfg: ConfigType = (kernel_cfg or self.DEFAULT_KERNEL_CFG).copy()
         self.kernel_fn: Callable = FUNCTIONS.get(kernel_cfg.pop("type"))
         self.kernel_cfg: ConfigType = kernel_cfg
         self.reduction: str = reduction.lower()

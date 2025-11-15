@@ -51,7 +51,7 @@ class CenterlineToDirections(BaseTransform):
         self.sigma_blur: float = sigma_blur
         self.sigma_integration: float = sigma_integration
         self.result_key: str = result_key
-        self.dir_classes: Sequence[int] = dir_classes or (1, )
+        self.dir_classes: Sequence[int] = dir_classes or (1,)
 
     def transform(self, results: dict[str, Any]) -> dict[str, Any]:
         """
@@ -73,9 +73,7 @@ class CenterlineToDirections(BaseTransform):
         ), "Missing segmentation map key in results, load annotations first"
         gt_semantic_seg: np.ndarray = results["gt_seg_map"].copy().astype(np.float32)
 
-        assert (
-            len(gt_semantic_seg.shape) >= 2 or len(gt_semantic_seg.shape) < 4
-        ), "Segmentation map should be 2D or 3D"
+        assert 2 <= len(gt_semantic_seg.shape) < 4, "Segmentation map should be 2D or 3D"
 
         class_directions: list[np.ndarray] = []
         for class_idx in self.dir_classes:
@@ -84,12 +82,14 @@ class CenterlineToDirections(BaseTransform):
 
             # Compute gradient magnitude
             Ix: np.ndarray = ndimage.sobel(blurred_mask, axis=1)
-            Iy: np.ndarray = -ndimage.sobel(blurred_mask, axis=0)  # flipped due to an image coordinate system
+            Iy: np.ndarray = -ndimage.sobel(
+                blurred_mask, axis=0
+            )  # flipped due to an image coordinate system
 
             # Structure tensor components
-            Ixx: np.ndarray = Ix ** 2
+            Ixx: np.ndarray = Ix**2
             Ixy: np.ndarray = Ix * Iy
-            Iyy: np.ndarray = Iy ** 2
+            Iyy: np.ndarray = Iy**2
 
             # Average the components
             Jxx: np.ndarray = ndimage.gaussian_filter(Ixx, sigma=self.sigma_integration)
@@ -97,7 +97,7 @@ class CenterlineToDirections(BaseTransform):
             Jyy: np.ndarray = ndimage.gaussian_filter(Iyy, sigma=self.sigma_integration)
 
             theta: np.ndarray = 0.5 * np.arctan2(2 * Jxy, Jxx - Jyy)
-            shifted_theta: np.ndarray = theta + .5 * np.pi  # Convert to [0, pi)
+            shifted_theta: np.ndarray = theta + 0.5 * np.pi  # Convert to [0, pi)
 
             class_directions.append(shifted_theta)
 

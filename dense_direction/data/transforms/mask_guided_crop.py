@@ -19,7 +19,7 @@ class MaskGuidedRandomCrop(BaseTransform):
     """
     Random crop the image and sematic segmentation map based on positive class location.
 
-    This transform ensures that positive class is in the middle of the image and does not
+    This transform ensures that the positive class is in the middle of the image and does not
     take too much or too little image area.
 
     Required Keys:
@@ -34,8 +34,8 @@ class MaskGuidedRandomCrop(BaseTransform):
     Args:
         crop_size (Union[int, Tuple[int, int]]): Expected size after cropping with the format of
             (h, w). If set to an integer, then cropping width and height are equal to this integer.
-        min_ratio (float): The minimum ratio that positive category can occupy.
-        max_ratio (float): The maximum ratio that positive category can occupy.
+        min_ratio (float): The minimum ratio that a positive category can occupy.
+        max_ratio (float): The maximum ratio that a positive category can occupy.
         max_attempts (int): The maximum number of attempts to crop.
         ignore_index (int): The label index to be ignored. Default: 255
         by_index (Optional[int]): The index of the category to be used to guide cropping. If None,
@@ -58,8 +58,8 @@ class MaskGuidedRandomCrop(BaseTransform):
             crop_size (Union[int, Tuple[int, int]]): Expected size after cropping with the format
                 of (h, w). If set to an integer, then cropping width and height are equal to this
                 integer.
-            min_ratio (float): The minimum ratio that positive category can occupy.
-            max_ratio (float): The maximum ratio that positive category can occupy.
+            min_ratio (float): The minimum ratio that a positive category can occupy.
+            max_ratio (float): The maximum ratio that a positive category can occupy.
             max_attempts (int): The maximum number of attempts to crop.
             ignore_index (int): The label index to be ignored. Default: 255
             by_index (Optional[int]): The index of the category to be used to guide cropping.
@@ -130,6 +130,8 @@ class MaskGuidedRandomCrop(BaseTransform):
             mask_roi = np.where(mask_roi == self.by_index, 1, 0)
 
         location_candidates: list[tuple[int, int]] = list(zip(*np.where(mask_roi > 0)))
+        assert location_candidates, "No positive class found in the mask"
+
         crop_location: tuple[int, int] = random.choice(location_candidates)
 
         if self.min_ratio == 0.0 and self.max_ratio == 1.0:
@@ -147,7 +149,7 @@ class MaskGuidedRandomCrop(BaseTransform):
 
     def _crop_image(self, image: np.ndarray, crop_location: tuple[int, int]) -> np.ndarray:
         """
-        Crop from image based on provided bounding box.
+        Crop from image based on the provided bounding box.
 
         Args:
             image (np.ndarray): Original input image.
@@ -175,7 +177,7 @@ class MaskGuidedRandomCrop(BaseTransform):
 
         crop_location: tuple[int, int] = self._get_crop_location(results)
 
-        # Crop image and alter image and its shape in results
+        # Crop image and alter the image and its shape in results
         img: np.ndarray = self._crop_image(results["img"], crop_location)
         results["img"] = img
         results["img_shape"] = img.shape[:2]
