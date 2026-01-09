@@ -171,9 +171,10 @@ class EfficientDirectionalLoss(nn.Module):
             Tensor: Tensor containing transformed ground truth semantic segmentation map of shape
                 (len(kernel_mask), div).
         """
-
-        map_patches = F.unfold(gt_sem_seg, self.k_size, padding=self.pad)  # n, k_size^2, k * h * w
-        map_patches = map_patches.permute(0, 2, 1)  # n, k * h * w, k_size^2
+        n, k, h, w = gt_sem_seg.shape
+        gt_sem_seg_reshaped = gt_sem_seg.reshape(n * k, 1, h, w)
+        map_patches = F.unfold(gt_sem_seg_reshaped, self.k_size, padding=self.pad)  # n*k, k_size^2, h * w
+        map_patches = map_patches.permute(0, 2, 1)  # n * k, h * w, k_size^2
         map_patches = map_patches.reshape(-1, self.k_size**2)  # n * k * h * w, k_size^2
 
         filtered_map_patches = map_patches.index_select(dim=0, index=kernel_mask)
