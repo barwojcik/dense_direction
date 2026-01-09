@@ -111,6 +111,9 @@ class Dino2TorchHub(BaseModule):
     def _freeze(self) -> None:
         if self.frozen:
             self.layers.requires_grad_(False)
+            self.layers.eval()
+            self.layers.train = lambda mode=True: self.layers
+
 
     def forward(self, x: Tensor) -> list[Tensor]:
         """
