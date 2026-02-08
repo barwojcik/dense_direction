@@ -5,7 +5,6 @@ This module implements DPTDecoderBlock class that is a DPT decoder module extrac
 DPTHead.
 """
 
-import math
 from typing import Sequence
 
 from torch import Tensor

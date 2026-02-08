@@ -132,7 +132,6 @@ dense_direction/                     Dense direction framework.
 │  │  ├─ efficient_directional.py    Efficient directional loss.
 │  │  ├─ smoothness.py               Smoothness loss.
 │  │  └─ kernels/                    Loss kernels.
-│  │     ├─ __init__.py              Kernel exports.
 │  │     ├─ directional_kernels.py   Directional kernels.
 │  │     └─ utils.py                 Kernel utilities.
 │  └─ meta_arch/                     Meta-architectures.
