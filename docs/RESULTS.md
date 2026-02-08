@@ -1,5 +1,9 @@
 # Results
 
-It works, trust me bro.
+Results are in progress. This page is reserved for:
 
-(Maybe in the future there will be a table of results here. For now, I don't have time and resources to do that.)
+- Quantitative tables (per-dataset metrics and baselines).
+- Qualitative visualizations (direction overlays and failure cases).
+- Reproducibility notes (config hashes and checkpoint links).
+
+If you add new results, include the exact config path and dataset split so they can be reproduced.
