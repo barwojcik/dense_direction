@@ -34,8 +34,12 @@ model = dict(
             ],
         ),
         dummy_heads=[
-            dict(gt_scale_factor=.75,),
-            dict(gt_scale_factor=.5,),
+            dict(
+                gt_scale_factor=0.75,
+            ),
+            dict(
+                gt_scale_factor=0.5,
+            ),
         ],
     ),
 )
