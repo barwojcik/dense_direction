@@ -62,13 +62,13 @@ not efficient, but it's unlikely in practice).
 
 ## Getting started
 1) Install the OpenMMLab stack (`mmengine`, `mmcv`, `mmseg`) following their official documentation.
-2) Install the remaining Python dependencies:
+2) Install `dense_direction`:
    ```bash
-   pip install -r requirements.txt
+   pip install .
    ```
 3) Pick a config and run training/testing:
    ```bash
-   python run.py --config configs/dir/dinov2_dpt_concrete_cracks_10k.py
+   python tools/run.py --config configs/dir/dinov2_dpt_concrete_cracks_10k.py
    ```
 For more detail, see [SETUP.md](docs/SETUP.md) and [USAGE.md](docs/USAGE.md).
 
