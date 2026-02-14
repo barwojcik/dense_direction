@@ -31,19 +31,23 @@
    ```bash
    mim install mmengine==0.10.3 mmcv==2.1.0 mmdet==3.3.0 mmsegmentation==1.2.2
    ```
-7) **Install remaining dependencies**:
+7) **Install `dense_direction`**:
    ```bash
-   pip install -r requirements.txt
+   pip install .
    ```
 
 ## Alternative (Docker)
 
 ### Docker installation and remote interpreter
 1) **Prerequisites**: Docker installed and running.
-2) **Build the image**:
-   ```bash
-   docker build -t dense-direction .
-   ```
+2) **Build the image or pull it from GHCR**:
+    ```bash
+    docker build -t dense-direction .
+    ```
+   
+    ```bash
+    docker pull ghcr.io/barwojcik/dense_direction:latest
+    ```
 3) **Configure a remote interpreter (optional)**:
    - In your IDE or editor, add a Docker-based Python interpreter.
    - Select your Docker server and the `dense-direction` image.

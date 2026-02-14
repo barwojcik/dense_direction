@@ -11,6 +11,6 @@ Python config file that declares the model, datasets, training loop, hooks, and 
 ## Common workflow
 1) Pick a base config closest to your dataset or model.
 2) Override paths and dataset settings for your local environment.
-3) Run with `run.py` and optional `--cfg-options` overrides.
+3) Run with `tools/run.py` and optional `--cfg-options` overrides.
 
 For details on the config syntax and available keys, refer to the `mmengine` and `mmseg` docs.
