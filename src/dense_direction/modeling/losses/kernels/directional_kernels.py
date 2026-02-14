@@ -183,9 +183,9 @@ def polar_wedge_kernel(
         Tensor: Tensor of shape (div, k_size, k_size), where k_size = 2 * pad +1.
     """
 
-    assert (
-        0 < threshold <= 0.25 * np.pi
-    ), "Angular distance threshold must be in range from 0 to 0.25π."
+    assert 0 < threshold <= 0.25 * np.pi, (
+        "Angular distance threshold must be in range from 0 to 0.25π."
+    )
 
     k_size: int = get_kernel_size(pad)
 

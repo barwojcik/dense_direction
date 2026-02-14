@@ -71,9 +71,9 @@ class CenterlineToDirections(BaseTransform):
             dict[str, Any]: The result dictionary with the computed direction values in radians
                 (from 0 to π) for each class in dir_classes. The result is stored under a new key.
         """
-        assert (
-            "gt_seg_map" in results.keys()
-        ), "Missing segmentation map key in results, load annotations first"
+        assert "gt_seg_map" in results.keys(), (
+            "Missing segmentation map key in results, load annotations first"
+        )
         gt_semantic_seg: np.ndarray = results["gt_seg_map"].copy().astype(np.float32)
 
         assert 2 <= len(gt_semantic_seg.shape) < 4, "Segmentation map should be 2D or 3D"

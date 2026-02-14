@@ -92,9 +92,9 @@ class Dino2TorchHub(BaseModule):
         """
 
         super().__init__(**kwargs)
-        assert (
-            model_size in self.MODEL_NAMES.keys()
-        ), f"Model size should be one of {self.MODEL_NAMES.keys()}"
+        assert model_size in self.MODEL_NAMES.keys(), (
+            f"Model size should be one of {self.MODEL_NAMES.keys()}"
+        )
         if with_registers:
             model_name = self.MODEL_REG_NAMES[model_size]
         else:

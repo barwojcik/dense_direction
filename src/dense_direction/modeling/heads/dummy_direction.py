@@ -72,9 +72,9 @@ class DummyDirectionHead(BaseDirectionDecodeHead):
         Returns:
             inputs (Tensor): Input direction vector field for each class (N, K, 2, H, W).
         """
-        assert (
-            len(inputs.shape) == 4
-        ), f"Input tensor shape does not match. Got {inputs.shape} should be (N, K, 2, H, W)."
+        assert len(inputs.shape) == 4, (
+            f"Input tensor shape does not match. Got {inputs.shape} should be (N, K, 2, H, W)."
+        )
         assert inputs.shape[-4] == self.num_classes, (
             f"Input tensor shape does not match. Got {inputs.shape} (N, K, 2, H, W). K should be "
             f"{self.num_classes} instead got {inputs.shape[-4]}."

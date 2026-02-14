@@ -92,9 +92,9 @@ class Dino3TorchHub(BaseModule):
         """
 
         super().__init__(**kwargs)
-        assert (
-            model_size in self.MODEL_NAMES.keys()
-        ), f"Model size should be one of {self.MODEL_NAMES.keys()}"
+        assert model_size in self.MODEL_NAMES.keys(), (
+            f"Model size should be one of {self.MODEL_NAMES.keys()}"
+        )
         assert weights_path is not None, "Please provide a valid weights path"
         assert Path(weights_path).exists(), "Weights path does not exist"
 

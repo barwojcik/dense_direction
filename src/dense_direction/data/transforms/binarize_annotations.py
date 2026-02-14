@@ -45,9 +45,9 @@ class BinarizeAnnotations(BaseTransform):
             dict[str, Any]: The result dictionary with the transformed semantic
             segmentation map.
         """
-        assert (
-            "gt_seg_map" in results.keys()
-        ), "Missing segmentation map key in results, load annotations first"
+        assert "gt_seg_map" in results.keys(), (
+            "Missing segmentation map key in results, load annotations first"
+        )
         gt_semantic_seg = results["gt_seg_map"]
 
         assert 2 <= len(gt_semantic_seg.shape) < 4, "Segmentation map should be 2D or 3D"

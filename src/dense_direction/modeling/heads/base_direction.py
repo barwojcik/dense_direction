@@ -251,8 +251,8 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         self.input_transform: str | None = input_transform
         self.in_index = in_index
         if input_transform is not None:
-            assert isinstance(in_channels, (list | tuple))
-            assert isinstance(in_index, (list | tuple))
+            assert isinstance(in_channels, (list, tuple))
+            assert isinstance(in_index, (list, tuple))
             assert len(in_channels) == len(in_index)
             if input_transform == "resize_concat":
                 self.in_channels = sum(in_channels)
@@ -267,7 +267,7 @@ class BaseDirectionDecodeHead(BaseModule, metaclass=ABCMeta):
         """Initialize ``loss_decode``"""
         if isinstance(loss_decode, dict):
             self.loss_decode = build_loss(loss_decode)
-        elif isinstance(loss_decode, (list | tuple)):
+        elif isinstance(loss_decode, (list, tuple)):
             self.loss_decode = nn.ModuleList()
             for loss in loss_decode:
                 self.loss_decode.append(build_loss(loss))

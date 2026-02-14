@@ -1,11 +1,6 @@
 name: Test
 
 on:
-  push:
-    paths-ignore:
-      - "**/*.md"
-      - ".pre-commit-config.yaml"
-      - ".gitignore"
   pull_request:
     branches:
       - main
