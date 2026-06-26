@@ -1,10 +1,11 @@
 """
 DirectionalLossMetric metric.
 
-This module provides a DirectionalLossMetric class that calculates loss value in evaluation.
+This module provides a DirectionalLossMetric class that evaluates direction estimation
+by computing the directional loss on crops of each prediction.
 """
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 import torch
@@ -19,25 +20,30 @@ class DirectionalLossMetric(BaseMetric):
     """
     DirectionalLossMetric class.
 
-    This class that calculates directional loss during evaluation.
+    Evaluates direction estimation by sliding a fixed-size crop window over each
+    prediction and accumulating the directional loss over all foreground pixels.
+    The final metric is the pixel-weighted mean loss across all crops and samples.
+
+    The loss function is always configured with ``reduction='none'`` internally so
+    that per-pixel losses can be properly accumulated across crops.
 
     Args:
-        loss_config (ConfigType): Loss configuration.
-        dir_classes (int|Sequence[int]): Index or sequence of indexes of classes for which
-            direction estimation is performed. If not provided, it assumes binary segmentation and
-            positive class as linear. Default: None.
-        collect_device (str): Device name used for collecting results from different ranks
-            during distributed training. Must be 'cpu' or 'gpu'. Defaults to 'cpu'.
-        prefix (str, optional): The prefix that will be added in the metric names to
-            disambiguate homonymous metrics of different evaluators. If prefix is not provided
-            in the argument, self.default_prefix will be used instead. Default: None
-        collect_dir: (str, optional): Synchronize directory for collecting data from different
-            ranks. This argument should only be configured when ``collect_device`` is 'cpu'.
-            Defaults to None.
+        loss_config (ConfigType, optional): Loss configuration dict. The loss is forced
+            to ``reduction='none'`` regardless of the value in this config.
+            Default: ``dict(type="EfficientDirectionalLoss")``.
+        dir_classes (Sequence[int] | None, optional): Class indices for which direction
+            estimation is performed. Defaults to ``(1,)`` (binary foreground class).
+        size (int, optional): Crop size in pixels (height and width). Default: 392.
+        step (int, optional): Sliding stride in pixels. Default: 378.
+        collect_device (str, optional): Device for distributed result collection.
+            Default: ``'cpu'``.
+        prefix (str | None, optional): Metric name prefix. Default: None.
+        collect_dir (str | None, optional): Directory for CPU result collection.
+            Default: None.
     """
 
     default_prefix = "directional_loss"
-    DEFAULT_LOSS_CFG = dict(type="EfficientDirectionalLoss")
+    DEFAULT_LOSS_CFG: dict = dict(type="EfficientDirectionalLoss")
 
     def __init__(
         self,
@@ -50,97 +56,120 @@ class DirectionalLossMetric(BaseMetric):
         collect_dir: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """
-        Initializes DirectionalLossMetric class.
-
-        This class that calculates directional loss during evaluation.
-
-        Args:
-            loss_config (ConfigType): Loss configuration.
-            dir_classes (int|Sequence[int]): Index or sequence of indexes of classes for which
-                direction estimation is performed. If not provided, it assumes binary segmentation
-                and positive class as linear. Default: None.
-            collect_device (str): Device name used for collecting results from different ranks
-                during distributed training. Must be 'cpu' or 'gpu'. Defaults to 'cpu'.
-            prefix (str, optional): The prefix that will be added in the metric names to
-                disambiguate homonymous metrics of different evaluators. If prefix is not provided
-                in the argument, self.default_prefix will be used instead. Default: None
-            collect_dir: (str, optional): Synchronize directory for collecting data from different
-                ranks. This argument should only be configured when ``collect_device`` is 'cpu'.
-                Defaults to None.
-        """
         super().__init__(
             collect_device=collect_device,
             prefix=prefix,
             collect_dir=collect_dir,
         )
-        self.loss_function = MODELS.build(loss_config or self.DEFAULT_LOSS_CFG).cuda()
+        # Force reduction='none' so we can accumulate per-pixel losses ourselves
+        cfg = (loss_config or self.DEFAULT_LOSS_CFG).copy()
+        cfg["reduction"] = "none"
+        self.loss_function = MODELS.build(cfg)
+        self._loss_on_device: bool = False
+
         self.dir_classes: Sequence[int] = dir_classes or (1,)
         self.size: int = size
         self.step: int = step
 
+    # ------------------------------------------------------------------
+    # GT transform
+    # ------------------------------------------------------------------
+
     def _transform_gt_sem_seg(self, gt_sem_seg: Tensor) -> Tensor:
         """
-        Transforms gt_sem_seg maps into separate binary maps per class for which directions will
-        be estimated.
+        Converts a multi-class GT map to per-class binary maps.
 
         Args:
-            gt_sem_seg (Tensor): Ground truth semantic segmentation map of shape (N, C, H, W).
+            gt_sem_seg (Tensor): Shape ``(N, C, H, W)``.
 
         Returns:
-            Tensor: Semantic segmentation map of shape (N, K, 1, H, W) where K number of linear
-                classes.
+            Tensor: Shape ``(N, K, 1, H, W)`` where K = len(dir_classes).
         """
-        class_maps: list[Tensor] = []
-        for class_index in self.dir_classes:
-            class_map: Tensor = torch.where(gt_sem_seg == class_index, 1, 0)
-            class_maps.append(class_map)
+        class_maps = [torch.where(gt_sem_seg == idx, 1, 0) for idx in self.dir_classes]
         return torch.stack(class_maps, dim=1).float()
 
-    def compute_metrics(self, results: list) -> dict:
-        """
-        Compute the metrics from processed results.
+    # ------------------------------------------------------------------
+    # Sliding-window crop iterator
+    # ------------------------------------------------------------------
 
-        Args:
-            results (list): The processed results of each batch.
-
-        Returns:
-            Dict[str, float]: The computed loss.
+    def _iter_crop_windows(self, h: int, w: int) -> Iterator[tuple[slice, slice]]:
         """
-        loss_value = sum([r[0] for r in results]) / sum([r[1] for r in results])
-        return {"loss": loss_value}
+        Yields ``(y_slice, x_slice)`` pairs that tile the image with overlap.
+
+        The last window along each axis is snapped to the image boundary so that
+        every pixel is covered without padding.
+        """
+        h_grids = max(h - self.size + self.step - 1, 0) // self.step + 1
+        w_grids = max(w - self.size + self.step - 1, 0) // self.step + 1
+        for hi in range(h_grids):
+            for wi in range(w_grids):
+                y1 = hi * self.step
+                x1 = wi * self.step
+                y2 = min(y1 + self.size, h)
+                x2 = min(x1 + self.size, w)
+                # Snap to boundary so the crop is always exactly self.size
+                y1 = max(y2 - self.size, 0)
+                x1 = max(x2 - self.size, 0)
+                yield slice(y1, y2), slice(x1, x2)
+
+    # ------------------------------------------------------------------
+    # Metric protocol
+    # ------------------------------------------------------------------
 
     def process(self, data_batch: Any, data_samples: Sequence[dict]) -> None:
         """
-        Process one batch of data and data_samples.
+        Process one batch of data samples and accumulate results.
 
-        The processed results should be stored in ``self.results``, which will
-        be used to compute the metrics when all batches have been processed.
-
-        Args:
-            data_batch (dict): A batch of data from the dataloader.
-            data_samples (Sequence[dict]): A batch of outputs from the model.
+        Each result entry is a ``(loss_sum, pixel_count)`` tuple so that
+        ``compute_metrics`` can compute the pixel-weighted mean.
         """
         for data_sample in data_samples:
-            pred_vector_field = data_sample["estimated_vs"]["data"].unsqueeze(0).unsqueeze(0)
+            pred_vf = data_sample["estimated_vs"]["data"].unsqueeze(0).unsqueeze(0)
             gt_sem_seg = data_sample["gt_sem_seg"]["data"].unsqueeze(0)
             gt_sem_seg = self._transform_gt_sem_seg(gt_sem_seg)
 
-            # TODO: fix this, tbh the whole class needs a rewrite
-            x = 0
-            y = 0
+            # Lazy device placement — move loss once on first sample
+            if not self._loss_on_device:
+                self.loss_function = self.loss_function.to(pred_vf.device)
+                self._loss_on_device = True
+
             h, w = gt_sem_seg.shape[-2:]
 
-            while x < h:
-                while y < w:
-                    pred_crop = pred_vector_field[:, :, :, x : x + self.size, y : y + self.size]
-                    gt_crop = gt_sem_seg[:, :, :, x : x + self.size, y : y + self.size]
+            for y_sl, x_sl in self._iter_crop_windows(h, w):
+                pred_crop = pred_vf[:, :, :, y_sl, x_sl]
+                gt_crop = gt_sem_seg[:, :, :, y_sl, x_sl]
 
-                    if gt_crop.sum() > 0:
-                        loss = self.loss_function(pred_crop, gt_crop)
-                        self.results.append((loss.sum().item(), len(loss)))
+                if gt_crop.sum() == 0:
+                    continue
 
-                    y = y + self.step
+                with torch.no_grad():
+                    loss = self.loss_function(pred_crop, gt_crop)
 
-                x = x + self.step
-                y = 0
+                # loss is (M,) for efficient losses (M = foreground pixels in crop)
+                # or (N*K, 1, H, W) for standard losses — handle both
+                n_pixels = int(loss.numel())
+                if n_pixels == 0:
+                    continue
+
+                self.results.append((float(loss.sum().item()), n_pixels))
+
+    def compute_metrics(self, results: list) -> dict:
+        """
+        Compute the pixel-weighted mean directional loss.
+
+        Args:
+            results (list): List of ``(loss_sum, pixel_count)`` tuples.
+
+        Returns:
+            dict: ``{"loss": float}`` or ``{"loss": nan}`` when no foreground pixels.
+        """
+        if not results:
+            return {"loss": float("nan")}
+
+        total_loss = sum(r[0] for r in results)
+        total_pixels = sum(r[1] for r in results)
+
+        if total_pixels == 0:
+            return {"loss": float("nan")}
+
+        return {"loss": total_loss / total_pixels}

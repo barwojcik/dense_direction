@@ -31,9 +31,15 @@ registry_map = {
         ("MODELS", "LinearHead"),
         ("MODELS", "MultiscaleLossDirectionHead"),
         # - losses
+        ("MODELS", "CosineDirectionalLoss"),
         ("MODELS", "DirectionalLoss"),
+        ("MODELS", "EfficientCosineDirectionalLoss"),
         ("MODELS", "EfficientDirectionalLoss"),
+        ("MODELS", "EfficientKLDirectionalLoss"),
+        ("MODELS", "EfficientVonMisesDirectionalLoss"),
+        ("MODELS", "KLDirectionalLoss"),
         ("MODELS", "SmoothnessLoss"),
+        ("MODELS", "VonMisesDirectionalLoss"),
         # - meta-architectures
         ("MODELS", "Directioner"),
         ("MODELS", "SegmentoDirectioner"),
@@ -58,6 +64,9 @@ registry_map = {
         ("FUNCTIONS", "polar_wedge_kernel"),
         ("FUNCTIONS", "polar_disc_kernel"),
         ("FUNCTIONS", "polar_sector_kernel"),
+        ("FUNCTIONS", "gaussian_smoothness_kernel"),
+        ("FUNCTIONS", "uniform_smoothness_kernel"),
+        ("FUNCTIONS", "distance_weighted_smoothness_kernel"),
     ],
 )
 def test_registry_registration(registry_name, name):
